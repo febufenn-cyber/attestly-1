@@ -29,7 +29,7 @@ const XML_OPTIONS = {
   trimValues: false,
   processEntities: false,
   stopNodes: ['*.script'],
-} as const;
+};
 
 function textFromXmlOrdered(value: unknown): string {
   if (Array.isArray(value)) return value.map(textFromXmlOrdered).join('');
@@ -228,7 +228,6 @@ async function extractPdf(input: ExtractionInput): Promise<ExtractionManifest> {
   const document = await pdfjs.getDocument({
     data: input.bytes,
     useSystemFonts: true,
-    isEvalSupported: false,
     disableFontFace: true,
   }).promise;
   const nodes: DocumentNode[] = [];
@@ -482,11 +481,7 @@ async function extractDocx(input: ExtractionInput): Promise<ExtractionManifest> 
 
 async function extractXlsx(input: ExtractionInput): Promise<ExtractionManifest> {
   const workbook = new ExcelJS.Workbook();
-  const buffer = input.bytes.buffer.slice(
-    input.bytes.byteOffset,
-    input.bytes.byteOffset + input.bytes.byteLength,
-  );
-  await workbook.xlsx.load(buffer);
+  await workbook.xlsx.load(Buffer.from(input.bytes));
   const nodes: DocumentNode[] = [];
   const warnings: ExtractionWarning[] = [];
   let order = 0;

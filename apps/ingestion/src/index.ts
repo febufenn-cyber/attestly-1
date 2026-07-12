@@ -3,10 +3,10 @@ import {
   buildEvidenceSpans,
   ExtractEvidenceMessageSchema,
   ExtractionManifestSchema,
-  retryDelaySeconds,
   sha256Hex,
   type ExtractEvidenceMessage,
 } from '../../../packages/evidence/src/index';
+import { retryDelaySeconds } from '../../../packages/foundation/src/index';
 
 interface QueueMessage<T> {
   body: T;

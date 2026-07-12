@@ -188,7 +188,8 @@ export function stableNodeId(prefix: string, ...parts: Array<string | number | n
 
 export async function sha256Hex(value: string | Uint8Array): Promise<string> {
   const bytes = typeof value === 'string' ? new TextEncoder().encode(value) : value;
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  const digestBytes = Uint8Array.from(bytes);
+  const digest = await crypto.subtle.digest('SHA-256', digestBytes.buffer);
   return [...new Uint8Array(digest)]
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');

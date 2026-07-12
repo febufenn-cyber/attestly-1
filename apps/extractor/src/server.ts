@@ -37,7 +37,7 @@ async function scan(
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/octet-stream' },
-    body: bytes,
+    body: Buffer.from(bytes),
   });
   if (!response.ok) return 'unavailable';
   const result = z
