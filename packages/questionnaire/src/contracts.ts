@@ -44,6 +44,10 @@ export const CreateQuestionnaireArtifactInputSchema = z.object({
   format: QuestionnaireFormatSchema,
 });
 
+const MappingDestinationSchema = AnswerDestinationSchema.extend({
+  questionLocalId: z.string().min(1),
+});
+
 export const MappingRevisionInputSchema = z.object({
   targetScope: z.object({
     mode: z.enum(['all', 'selected', 'unknown']),
@@ -56,17 +60,19 @@ export const MappingRevisionInputSchema = z.object({
   notes: z.string().max(4000).default(''),
   mapping: z.object({
     questions: z.array(QuestionnaireQuestionSchema).max(20_000),
-    destinations: z.array(AnswerDestinationSchema).max(30_000),
+    destinations: z.array(MappingDestinationSchema).max(30_000),
     conditions: z.array(QuestionnaireConditionSchema).max(20_000),
-    instructions: z.array(
-      z.object({
-        localId: z.string(),
-        scope: z.enum(['workbook', 'sheet', 'section', 'question', 'answer_field']),
-        category: z.string(),
-        text: z.string(),
-        sourceLocation: z.record(z.string(), z.unknown()),
-      }),
-    ).max(20_000),
+    instructions: z
+      .array(
+        z.object({
+          localId: z.string(),
+          scope: z.enum(['workbook', 'sheet', 'section', 'question', 'answer_field']),
+          category: z.string(),
+          text: z.string(),
+          sourceLocation: z.record(z.string(), z.unknown()),
+        }),
+      )
+      .max(20_000),
   }),
 });
 
