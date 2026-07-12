@@ -84,7 +84,12 @@ with queued as (
 update phase3_ids set job_id = queued.job_id, outbox_id = queued.outbox_id from queued;
 
 select is((select count(*)::integer from public.jobs where type = 'extract_evidence'), 1, 'Extraction request creates one typed job');
-select is((select count(*)::integer from public.evidence_queue_outbox), 0, 'Normal users cannot read the privileged extraction outbox');
+select throws_ok(
+  $$select count(*) from public.evidence_queue_outbox$$,
+  '42501',
+  null,
+  'Normal users receive a hard denial on the privileged extraction outbox'
+);
 
 reset role;
 
