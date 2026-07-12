@@ -1,7 +1,12 @@
 node_modules/
 .env
 .env.*
+!.env.example
 .dev.vars
+apps/*/.dev.vars
 dist/
 .wrangler/
+.supabase/
+coverage/
+*.log
 .DS_Store
