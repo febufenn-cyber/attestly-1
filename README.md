@@ -18,36 +18,49 @@ The product, evidence, workflow, security, evaluation, and launch contracts are 
 
 ### Phase 2 — Secure product foundation
 
-The secure vertical slice is implemented in [`docs/phase-2/`](./docs/phase-2/README.md):
+The secure workspace, authentication, tenant isolation, immutable uploads, queues, jobs, audit trail, CI, and staging foundations are implemented in [`docs/phase-2/`](./docs/phase-2/README.md).
 
-- React/Vite browser application with email magic-link authentication;
-- workspace creation, switching, membership roles, and one-time invitations;
-- Hono API on Cloudflare Workers with verified Supabase JWTs and application authorization;
-- Supabase Postgres schema, migrations, RLS, private Storage policies, and secure RPCs;
-- immutable, tenant-owned upload identities and signed direct uploads;
-- Cloudflare Queue worker with leasing, idempotency, retry classification, size/type validation, and SHA-256 hashing;
-- transactional job/outbox creation and scheduled outbox recovery;
-- append-only audit events with metadata redaction;
-- two-tenant pgTAP attack tests;
-- CI and protected manual staging deployment.
+### Phase 3 — Evidence ingestion and retrieval
 
-Phase 2 is an engineering foundation, not approval to process real customer data. Malware scanning, production region and retention approval, subprocessor review, and external security validation remain required before beta.
+The evidence-admission vertical slice is implemented in [`docs/phase-3/`](./docs/phase-3/README.md):
+
+- logical evidence documents and immutable versions;
+- evidence class, confidentiality, external disclosure policy, scope, effective dates, and review dates;
+- dedicated credential-free extraction service;
+- PDF, DOCX, XLSX, CSV, and TXT adapters;
+- canonical document nodes and exact citable spans;
+- extraction quality and warning gates;
+- malware-scan approval requirement;
+- knowledge-owner evidence approval;
+- Postgres lexical retrieval with scope and disclosure eligibility before ranking;
+- optional provider-neutral pgvector records;
+- explicit contradiction relations;
+- reviewer-facing evidence console;
+- Phase 3 tenant, scope, approval, and retrieval tests.
+
+Phase 3 does not yet generate questionnaire answers. It establishes which exact source material may later support them.
 
 ## Repository map
 
 ```text
 apps/
-  web/        authentication, workspaces, invitations, uploads, lifecycle dashboard
-  api/        Hono request boundary, authorization, signed uploads, jobs, audit
-  worker/     queue consumer, object validation, hashing, retries, outbox recovery
+  web/               Phase 2 workspace and secure upload application
+  api/               Phase 2 workspace API
+  worker/            Phase 2 object-validation worker
+  evidence-console/  evidence admission, review, spans, and search laboratory
+  evidence-api/      evidence lifecycle, approval, and retrieval API
+  ingestion/         extraction queue orchestrator
+  extractor/         isolated Node parser service
 packages/
-  foundation/ shared schemas, permissions, job states, queue contracts, redaction
+  foundation/        shared identity, authorization, jobs, and audit contracts
+  evidence/          canonical extraction, scope, span, and ranking contracts
 supabase/
-  migrations/ tenant-safe schema, RLS, Storage policies, secure RPCs
-  tests/      two-tenant negative isolation suite
+  migrations/        tenant-safe platform and evidence domain
+  tests/             multi-tenant attack and evidence-retrieval suites
 docs/
-  phase-1/    product constitution and system definition
-  phase-2/    secure-foundation documentation and ADRs
+  phase-1/           product constitution
+  phase-2/           secure foundation
+  phase-3/           evidence intelligence
 ```
 
 ## Local development
@@ -60,12 +73,18 @@ npm install
 npm run supabase:start
 npm run supabase:reset
 npm run db:test
+
 npm run dev:api
 npm run dev:worker
 npm run dev:web
+
+npm run dev:extractor
+npm run dev:ingestion
+npm run dev:evidence-api
+npm run dev:evidence-console
 ```
 
-Use the local credentials returned by `supabase status`. Service-role credentials belong only in `apps/api/.dev.vars` and `apps/worker/.dev.vars`; never expose them through a `VITE_` variable.
+Use local credentials returned by `supabase status`. Service-role and extractor internal credentials must never use a `VITE_` prefix.
 
 ## Verification
 
@@ -75,12 +94,13 @@ npm run typecheck
 npm run test
 npm run build
 npm run db:test
+npm audit --omit=dev --audit-level=high
 ```
 
 ## MVP scope
 
-- [x] Secure multi-tenant workspaces, authentication, membership roles, immutable upload foundation, jobs, and audit trail
-- [ ] Versioned evidence extraction, scoping, approval, and retrieval
+- [x] Secure multi-tenant workspaces, authentication, roles, immutable uploads, jobs, and audit trail
+- [x] Versioned evidence extraction, exact provenance, scope, approval, and lexical retrieval
 - [ ] XLSX/CSV questionnaire import with compatibility and mapping review
 - [ ] Compound-question decomposition and claim-level evidence retrieval
 - [ ] Structured AI drafts with exact citations and explanatory answer states
@@ -92,27 +112,15 @@ The MVP does **not** autonomously submit questionnaire answers to external porta
 
 ## Architecture direction
 
-The foundation uses Cloudflare Workers + Hono and Supabase Auth, Postgres, RLS, private object storage, and later pgvector, deployed through Wrangler.
+The platform uses Cloudflare Workers + Hono and Supabase Auth, Postgres, RLS, private object storage, full-text retrieval, and optional pgvector. Heavy document parsing runs in a separate Node service without database credentials.
 
-The agent core remains provider-neutral. Model selection is configuration; tenant isolation, evidence rules, answer states, validators, and approvals stay outside model prompts.
-
-## Business hypothesis
-
-| | |
-|---|---|
-| Monetization | Per-questionnaire initially; seat/usage subscription after repeat use is validated |
-| First customer | B2B SaaS teams whose sales cycles are delayed by recurring security questionnaires |
-| Initial ICP | Approximately 20–300 employees, enterprise buyers, existing evidence, limited GRC staffing |
-| GTM wedge | Controlled first-questionnaire pilot with measurable reviewer time saved |
-| Competition risk | High: active AI-compliance market |
-| Primary trust risk | Unsupported, stale, wrong-scope, cross-tenant, or over-disclosed answers |
-| India angle | Helps Indian vendors complete US and international buyer security reviews faster |
+The future answer engine remains provider-neutral. Tenant isolation, evidence eligibility, scope, answer states, validators, and approvals remain outside model prompts.
 
 ## Delivery phases
 
 1. **Product constitution and system definition** — implemented.
-2. **Secure product foundation** — implemented as a pre-beta vertical slice.
-3. **Evidence ingestion and retrieval.**
+2. **Secure product foundation** — implemented.
+3. **Evidence ingestion, provenance, approval, and retrieval** — implemented as a pre-beta vertical slice.
 4. **Questionnaire normalization and structure-preserving import/export.**
 5. **Evidence-grounded answer engine.**
 6. **Human review and approval product.**

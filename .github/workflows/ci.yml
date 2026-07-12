@@ -26,11 +26,47 @@ jobs:
       - name: Format
         run: npm run format:check
       - name: Typecheck
-        run: npm run typecheck
+        run: |
+          npm run typecheck > typecheck.log 2>&1 || {
+            cat typecheck.log
+            exit 1
+          }
+      - name: Upload typecheck diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-diagnostics
+          path: typecheck.log
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Unit tests
-        run: npm run test
+        run: |
+          npm run test > test.log 2>&1 || {
+            cat test.log
+            exit 1
+          }
+      - name: Upload test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-diagnostics
+          path: test.log
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Build all deployable applications
-        run: npm run build
+        run: |
+          npm run build > build.log 2>&1 || {
+            cat build.log
+            exit 1
+          }
+      - name: Upload build diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-diagnostics
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Production dependency audit
         run: npm audit --omit=dev --audit-level=high
 
@@ -45,11 +81,34 @@ jobs:
       - name: Install Supabase CLI
         run: npm install
       - name: Start isolated local Supabase
-        run: npx supabase start
+        run: |
+          npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,inbucket > database-start.log 2>&1 || {
+            cat database-start.log
+            exit 1
+          }
       - name: Rebuild database from migrations
-        run: npx supabase db reset
+        run: |
+          npx supabase db reset > database-reset.log 2>&1 || {
+            cat database-reset.log
+            exit 1
+          }
       - name: Run pgTAP tenant-isolation tests
-        run: npx supabase test db
+        run: |
+          npx supabase test db > database-test.log 2>&1 || {
+            cat database-test.log
+            exit 1
+          }
+      - name: Upload database diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-diagnostics
+          path: |
+            database-start.log
+            database-reset.log
+            database-test.log
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Stop local Supabase
         if: always()
         run: npx supabase stop --no-backup
