@@ -171,7 +171,7 @@ export function normalizeEvidenceText(text: string): string {
     .normalize('NFKC')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
     .replace(/[ \t]+/g, ' ')
-    .replace(/\s*\n\s*/g, '\n')
+    .replace(/[ \t]*\n[ \t]*/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
@@ -283,7 +283,7 @@ export async function buildEvidenceSpans(
 const injectionPatterns: Array<{ code: string; pattern: RegExp }> = [
   {
     code: 'prompt_injection_ignore_instructions',
-    pattern: /ignore (all|any|the)?\s*(previous|prior|system|developer) instructions?/i,
+    pattern: /ignore\s+(?:all\s+|any\s+|the\s+)?(?:previous|prior|system|developer)(?:\s+(?:system|developer))?\s+instructions?/i,
   },
   {
     code: 'prompt_injection_reveal_prompt',
