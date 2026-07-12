@@ -1,0 +1,52 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "attestly-questionnaire-api-dev",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ENVIRONMENT": "development",
+    "EXPECTED_SUPABASE_PROJECT_REF": "local",
+    "ALLOWED_ORIGIN": "http://127.0.0.1:5176"
+  },
+  "queues": {
+    "producers": [
+      {
+        "binding": "QUESTIONNAIRE_QUEUE",
+        "queue": "attestly-questionnaire-jobs-dev"
+      }
+    ]
+  },
+  "env": {
+    "staging": {
+      "name": "attestly-questionnaire-api-staging",
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "ALLOWED_ORIGIN": "https://questionnaires-staging.attestly.example"
+      },
+      "queues": {
+        "producers": [
+          {
+            "binding": "QUESTIONNAIRE_QUEUE",
+            "queue": "attestly-questionnaire-jobs-staging"
+          }
+        ]
+      }
+    },
+    "production": {
+      "name": "attestly-questionnaire-api-production",
+      "vars": {
+        "ENVIRONMENT": "production",
+        "ALLOWED_ORIGIN": "https://questionnaires.attestly.example"
+      },
+      "queues": {
+        "producers": [
+          {
+            "binding": "QUESTIONNAIRE_QUEUE",
+            "queue": "attestly-questionnaire-jobs-production"
+          }
+        ]
+      }
+    }
+  }
+}
