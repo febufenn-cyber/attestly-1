@@ -59,14 +59,20 @@ async function download(urlValue: string): Promise<ArrayBuffer> {
 
 async function upload(urlValue: string, bytes: ArrayBuffer, contentType: string): Promise<void> {
   const url = validateStorageUrl(urlValue);
-  const response = await fetch(url, {
-    method: 'PUT',
-    headers: { 'content-type': contentType },
-    body: new Uint8Array(bytes),
-    redirect: 'error',
-    signal: AbortSignal.timeout(120_000),
-  });
-  if (!response.ok) throw new Error(`Destination upload failed with ${response.status}.`);
+  let lastStatus = 0;
+  for (const method of ['PUT', 'POST'] as const) {
+    const response = await fetch(url, {
+      method,
+      headers: { 'content-type': contentType, 'x-upsert': 'false' },
+      body: new Uint8Array(bytes),
+      redirect: 'error',
+      signal: AbortSignal.timeout(120_000),
+    });
+    if (response.ok) return;
+    lastStatus = response.status;
+    if (![404, 405].includes(response.status)) break;
+  }
+  throw new Error(`Destination upload failed with ${lastStatus}.`);
 }
 
 app.get('/health', (context) => context.json({ status: 'ok', service: 'attestly-questionnaire-processor' }));
@@ -103,6 +109,7 @@ app.post('/v1/export', async (context) => {
     await upload(input.destinationUploadUrl, result.output, contentType);
     return context.json({
       outputSha256: result.outputSha256,
+      outputSizeBytes: result.output.byteLength,
       structuralDiffs: result.structuralDiffs,
       changedLocations: result.changedLocations,
       warnings: result.warnings,
