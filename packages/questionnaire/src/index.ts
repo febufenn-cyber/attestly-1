@@ -364,6 +364,7 @@ export function evaluateCondition(
     const value = evaluateCondition(expression.condition, answers);
     return value === 'active' ? 'inactive' : value === 'inactive' ? 'active' : 'unknown';
   }
+  if (!('questionLocalId' in expression)) return 'unknown';
 
   const raw = answers[expression.questionLocalId];
   if (raw === undefined || raw === null) return 'unknown';

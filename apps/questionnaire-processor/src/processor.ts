@@ -8,6 +8,7 @@ import {
   QuestionnaireConditionSchema,
   QuestionnaireManifestSchema,
   QuestionnaireQuestionSchema,
+  StructuralInventorySchema,
   classifyPackageDiff,
   decomposeCompoundQuestion,
   detectPolarity,
@@ -317,7 +318,7 @@ export async function inspectXlsx(source: ArrayBuffer, sourceSha256: string): Pr
   for (const worksheet of workbook.worksheets) {
     const state = worksheet.state === 'veryHidden' ? 'very_hidden' : worksheet.state === 'hidden' ? 'hidden' : 'visible';
     inventory.sheetVisibility[worksheet.name] = state;
-    inventory.usedRanges[worksheet.name] = worksheet.dimensions;
+    inventory.usedRanges[worksheet.name] = String(worksheet.dimensions);
     inventory.hiddenRows[worksheet.name] = [];
     inventory.hiddenColumns[worksheet.name] = [];
     inventory.formulaCells[worksheet.name] = [];
@@ -326,7 +327,7 @@ export async function inspectXlsx(source: ArrayBuffer, sourceSha256: string): Pr
       accumulator[String(merge)] = true;
       return accumulator;
     }, {}));
-    if (worksheet.isProtected) inventory.protectedSheets.push(worksheet.name);
+    if (worksheet.model.sheetProtection) inventory.protectedSheets.push(worksheet.name);
 
     worksheet.eachRow({ includeEmpty: false }, (row) => {
       if (row.hidden) inventory.hiddenRows[worksheet.name]?.push(row.number);
@@ -412,7 +413,7 @@ export async function inspectXlsx(source: ArrayBuffer, sourceSha256: string): Pr
       const allowedValues = answerCell ? extractAllowedValues(answerCell) : [];
       const atomicRequests = decomposeCompoundQuestion(originalText);
       const formulaPresent = Boolean(answerCell && typeof answerCell.value === 'object' && answerCell.value && 'formula' in answerCell.value);
-      const protectedDestination = Boolean(worksheet.isProtected && answerCell?.protection.locked !== false);
+      const protectedDestination = Boolean(worksheet.model.sheetProtection && answerCell?.protection.locked !== false);
       const sourceLocation: SourceLocation = {
         format: 'xlsx',
         sheetName: worksheet.name,
