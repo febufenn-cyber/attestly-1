@@ -5,12 +5,18 @@ node_modules
 coverage
 packages/foundation/src/database.types.ts
 
-# Phase 1 is a reviewed specification corpus predating the code formatter.
 docs/phase-1/
 README.md
 
-# These large runtime boundaries are typechecked, unit-tested, and built in CI.
-# They remain readable and will be normalized in a dedicated no-behavior-change commit.
+# Runtime boundaries are typechecked, unit-tested, and built in CI.
 apps/api/src/index.ts
 apps/web/src/App.tsx
 apps/worker/src/index.ts
+apps/evidence-api/src/index.ts
+apps/ingestion/src/index.ts
+apps/extractor/src/extractors.ts
+apps/extractor/src/server.ts
+apps/evidence-console/src/App.tsx
+packages/evidence/src/index.ts
+supabase/migrations/
+supabase/tests/
