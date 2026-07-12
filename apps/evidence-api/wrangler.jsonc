@@ -1,0 +1,43 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "attestly-evidence-api-dev",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ENVIRONMENT": "development",
+    "EXPECTED_SUPABASE_PROJECT_REF": "local",
+    "ALLOWED_ORIGIN": "http://127.0.0.1:5174"
+  },
+  "queues": {
+    "producers": [
+      { "binding": "EXTRACTION_QUEUE", "queue": "attestly-extraction-jobs-dev" }
+    ]
+  },
+  "env": {
+    "staging": {
+      "name": "attestly-evidence-api-staging",
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "ALLOWED_ORIGIN": "https://evidence-staging.attestly.example"
+      },
+      "queues": {
+        "producers": [
+          { "binding": "EXTRACTION_QUEUE", "queue": "attestly-extraction-jobs-staging" }
+        ]
+      }
+    },
+    "production": {
+      "name": "attestly-evidence-api-production",
+      "vars": {
+        "ENVIRONMENT": "production",
+        "ALLOWED_ORIGIN": "https://evidence.attestly.example"
+      },
+      "queues": {
+        "producers": [
+          { "binding": "EXTRACTION_QUEUE", "queue": "attestly-extraction-jobs-production" }
+        ]
+      }
+    }
+  }
+}
