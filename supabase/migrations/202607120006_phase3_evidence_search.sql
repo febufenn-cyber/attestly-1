@@ -106,7 +106,7 @@ begin
       end::numeric final_rank
     from eligible
   ), selected as (
-    select * from ranked where scope_match <> 'mismatch' and final_rank > 0 order by final_rank desc, span_id limit p_limit
+    select * from ranked where ranked.scope_match <> 'mismatch' and ranked.final_rank > 0 order by ranked.final_rank desc, ranked.span_id limit p_limit
   )
   insert into public.retrieval_candidates (
     tenant_id, retrieval_run_id, evidence_span_id, keyword_score, scope_match,
