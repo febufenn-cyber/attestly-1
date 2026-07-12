@@ -481,7 +481,9 @@ async function extractDocx(input: ExtractionInput): Promise<ExtractionManifest> 
 
 async function extractXlsx(input: ExtractionInput): Promise<ExtractionManifest> {
   const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(Buffer.from(input.bytes));
+  const excelBuffer = new ArrayBuffer(input.bytes.byteLength);
+  new Uint8Array(excelBuffer).set(input.bytes);
+  await workbook.xlsx.load(excelBuffer);
   const nodes: DocumentNode[] = [];
   const warnings: ExtractionWarning[] = [];
   let order = 0;
