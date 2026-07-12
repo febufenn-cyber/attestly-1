@@ -176,8 +176,8 @@ select is((select status::text from public.questionnaire_snapshots where id = (s
 select throws_ok(
   $$update public.questionnaire_snapshots set snapshot_hash = repeat('d',64)$$,
   '42501',
-  'Frozen questionnaire snapshot identity is immutable',
-  'Snapshot identity cannot be changed after freezing'
+  null,
+  'Authenticated users receive a hard denial when attempting to mutate a frozen snapshot'
 );
 
 update phase4_ids set export_plan_id = public.create_questionnaire_export_plan(
