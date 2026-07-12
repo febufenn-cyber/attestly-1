@@ -1,0 +1,47 @@
+{
+  "name": "attestly",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:api": "wrangler dev --config apps/api/wrangler.jsonc",
+    "dev:worker": "wrangler dev --config apps/worker/wrangler.jsonc",
+    "dev:web": "vite --config apps/web/vite.config.ts",
+    "build": "npm run build:web && npm run build:api && npm run build:worker",
+    "build:web": "vite build --config apps/web/vite.config.ts",
+    "build:api": "wrangler deploy --dry-run --config apps/api/wrangler.jsonc --outdir dist/api",
+    "build:worker": "wrangler deploy --dry-run --config apps/worker/wrangler.jsonc --outdir dist/worker",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run typecheck && npm run test && npm run build",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:reset": "supabase db reset",
+    "db:test": "supabase test db",
+    "db:types": "supabase gen types typescript --local > packages/foundation/src/database.types.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.0",
+    "hono": "^4.7.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.4.0",
+    "prettier": "^3.5.0",
+    "supabase": "^2.20.0",
+    "typescript": "^5.8.0",
+    "vite": "^6.2.0",
+    "vitest": "^3.0.0",
+    "wrangler": "^4.5.0"
+  }
+}
