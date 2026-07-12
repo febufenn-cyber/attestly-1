@@ -47,7 +47,6 @@ begin
     returning * into run_row;
   query_value := websearch_to_tsquery('english', trim(p_query));
 
-  return query
   with eligible as (
     select
       span.id span_id,
