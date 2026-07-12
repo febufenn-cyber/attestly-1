@@ -1,0 +1,36 @@
+name: Phase 3 retrieval qualification autofix
+
+on:
+  push:
+    branches: [agent/phase-3-evidence-ingestion]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/phase-3-evidence-ingestion
+      - name: Qualify ranked retrieval fields
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('supabase/migrations/202607120006_phase3_evidence_search.sql')
+          text = path.read_text().replace(
+              "select * from ranked where scope_match <> 'mismatch' and final_rank > 0 order by final_rank desc, span_id limit p_limit",
+              "select * from ranked where ranked.scope_match <> 'mismatch' and ranked.final_rank > 0 order by ranked.final_rank desc, ranked.span_id limit p_limit",
+          )
+          path.write_text(text)
+          PY
+      - name: Commit fix
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add supabase/migrations/202607120006_phase3_evidence_search.sql
+          git commit -m "Qualify retrieval rank fields"
+          git push origin HEAD:agent/phase-3-evidence-ingestion
