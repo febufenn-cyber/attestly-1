@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "../../dist/questionnaire-processor",
+    "rootDir": "../..",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "declaration": false,
+    "sourceMap": true
+  },
+  "include": ["src/**/*.ts", "../../packages/questionnaire/src/index.ts"],
+  "exclude": ["src/**/*.test.ts"]
+}
