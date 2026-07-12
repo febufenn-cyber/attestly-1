@@ -1,0 +1,72 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "attestly-ingestion-dev",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ENVIRONMENT": "development",
+    "EXPECTED_SUPABASE_PROJECT_REF": "local",
+    "STORAGE_BUCKET": "attestly-evidence",
+    "EXTRACTOR_URL": "http://127.0.0.1:8090"
+  },
+  "queues": {
+    "producers": [
+      { "binding": "EXTRACTION_QUEUE", "queue": "attestly-extraction-jobs-dev" }
+    ],
+    "consumers": [
+      {
+        "queue": "attestly-extraction-jobs-dev",
+        "max_batch_size": 2,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "attestly-extraction-jobs-dead-dev"
+      }
+    ]
+  },
+  "triggers": { "crons": ["*/1 * * * *"] },
+  "env": {
+    "staging": {
+      "name": "attestly-ingestion-staging",
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "STORAGE_BUCKET": "attestly-evidence"
+      },
+      "queues": {
+        "producers": [
+          { "binding": "EXTRACTION_QUEUE", "queue": "attestly-extraction-jobs-staging" }
+        ],
+        "consumers": [
+          {
+            "queue": "attestly-extraction-jobs-staging",
+            "max_batch_size": 2,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "dead_letter_queue": "attestly-extraction-jobs-dead-staging"
+          }
+        ]
+      }
+    },
+    "production": {
+      "name": "attestly-ingestion-production",
+      "vars": {
+        "ENVIRONMENT": "production",
+        "STORAGE_BUCKET": "attestly-evidence"
+      },
+      "queues": {
+        "producers": [
+          { "binding": "EXTRACTION_QUEUE", "queue": "attestly-extraction-jobs-production" }
+        ],
+        "consumers": [
+          {
+            "queue": "attestly-extraction-jobs-production",
+            "max_batch_size": 2,
+            "max_batch_timeout": 5,
+            "max_retries": 5,
+            "dead_letter_queue": "attestly-extraction-jobs-dead-production"
+          }
+        ]
+      }
+    }
+  }
+}
