@@ -319,7 +319,7 @@ export function decomposeCompoundQuestion(text: string): AtomicClaimRequest[] {
   const prefixMatch = normalized.match(/^(do you|does your organization|are you|is your organization)\s+/i);
   const body = prefixMatch ? normalized.slice(prefixMatch[0].length) : normalized;
   const clauses = body
-    .split(/\s*(?:,\s*(?:and|or)\s+|;\s*|\band\b(?=\s+(?:restrict|rotate|encrypt|review|monitor|retain|require|perform|provide|maintain|use|store|process))|\bor\b(?=\s+(?:restrict|rotate|encrypt|review|monitor|retain|require|perform|provide|maintain|use|store|process)))\s*/i)
+    .split(/\s*(?:,\s*(?:and|or)\s+|,\s*(?=(?:restrict|rotate|encrypt|review|monitor|retain|require|perform|provide|maintain|use|store|process)\b)|;\s*|\band\b(?=\s+(?:restrict|rotate|encrypt|review|monitor|retain|require|perform|provide|maintain|use|store|process))|\bor\b(?=\s+(?:restrict|rotate|encrypt|review|monitor|retain|require|perform|provide|maintain|use|store|process)))\s*/i)
     .map((clause) => clause.trim())
     .filter((clause) => clause.length > 3);
 
