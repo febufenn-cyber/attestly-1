@@ -82,7 +82,7 @@ jobs:
         run: npm install
       - name: Start isolated local Supabase
         run: |
-          npx supabase start > database-start.log 2>&1 || {
+          npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,inbucket > database-start.log 2>&1 || {
             cat database-start.log
             exit 1
           }
