@@ -242,8 +242,8 @@ begin
 
   update public.evidence_versions set
     extraction_status = 'succeeded',
-    index_status = case when critical_count = 0 then 'ready' else 'not_indexed' end,
-    lifecycle_status = case when critical_count = 0 and quality >= 0.82 then 'ready_for_review' else 'extraction_review_required' end,
+    index_status = case when critical_count = 0 then 'ready'::public.index_status else 'not_indexed'::public.index_status end,
+    lifecycle_status = case when critical_count = 0 and quality >= 0.82 then 'ready_for_review'::public.evidence_lifecycle_status else 'extraction_review_required'::public.evidence_lifecycle_status end,
     malware_scan_status = (p_manifest->>'scanStatus')::public.malware_scan_status,
     extraction_quality = quality,
     extractor_name = p_manifest->>'extractorName',
@@ -311,12 +311,12 @@ begin
       where tenant_id = p_tenant_id and id = document_row.current_version_id;
   end if;
   update public.evidence_versions set
-    lifecycle_status = case when p_restricted then 'approved_restricted' else 'approved' end,
+    lifecycle_status = case when p_restricted then 'approved_restricted'::public.evidence_lifecycle_status else 'approved'::public.evidence_lifecycle_status end,
     approved_by = auth.uid(), approved_at = now(), index_status = 'ready'
   where tenant_id = p_tenant_id and id = version_row.id;
   update public.evidence_documents set
     current_version_id = version_row.id,
-    lifecycle_status = case when p_restricted then 'approved_restricted' else 'approved' end
+    lifecycle_status = case when p_restricted then 'approved_restricted'::public.evidence_lifecycle_status else 'approved'::public.evidence_lifecycle_status end
   where tenant_id = p_tenant_id and id = document_row.id;
   insert into public.evidence_approvals (
     tenant_id, evidence_version_id, decision, rationale, approved_scope_id, decided_by
