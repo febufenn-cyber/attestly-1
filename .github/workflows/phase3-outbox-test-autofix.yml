@@ -1,0 +1,36 @@
+name: Phase 3 outbox test autofix
+
+on:
+  push:
+    branches: [agent/phase-3-evidence-ingestion]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/phase-3-evidence-ingestion
+      - name: Require an explicit permission denial for the service outbox
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('supabase/tests/002_phase3_evidence.sql')
+          text = path.read_text().replace(
+              "select is((select count(*)::integer from public.evidence_queue_outbox), 0, 'Normal users cannot read the privileged extraction outbox');",
+              "select throws_ok(\n  $$select count(*) from public.evidence_queue_outbox$$,\n  '42501',\n  null,\n  'Normal users receive a hard denial on the privileged extraction outbox'\n);",
+          )
+          path.write_text(text)
+          PY
+      - name: Commit fix
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add supabase/tests/002_phase3_evidence.sql
+          git commit -m "Assert hard denial for evidence outbox access"
+          git push origin HEAD:agent/phase-3-evidence-ingestion
