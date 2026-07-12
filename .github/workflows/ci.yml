@@ -26,7 +26,19 @@ jobs:
       - name: Format
         run: npm run format:check
       - name: Typecheck
-        run: npm run typecheck
+        run: |
+          npm run typecheck > typecheck.log 2>&1 || {
+            cat typecheck.log
+            exit 1
+          }
+      - name: Upload typecheck diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-diagnostics
+          path: typecheck.log
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Unit tests
         run: npm run test
       - name: Build all deployable applications
