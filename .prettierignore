@@ -7,6 +7,7 @@ packages/foundation/src/database.types.ts
 
 docs/phase-1/
 docs/phase-3/
+docs/phase-4/
 README.md
 
 # Runtime and deployment boundaries are typechecked, tested, and built in CI.
@@ -18,6 +19,12 @@ apps/evidence-console/
 apps/ingestion/
 apps/extractor/
 packages/evidence/
+apps/questionnaire-api/
+apps/questionnaire-console/
+apps/questionnaire-worker/
+apps/questionnaire-processor/
+packages/questionnaire/
 supabase/migrations/
 supabase/tests/
 .github/workflows/deploy-phase3-staging.yml
+.github/workflows/deploy-phase4-staging.yml
