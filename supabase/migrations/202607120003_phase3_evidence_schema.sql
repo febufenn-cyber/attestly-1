@@ -345,7 +345,7 @@ create table public.evidence_queue_outbox (
   last_error text,
   created_at timestamptz not null default now(),
   primary key (tenant_id, id),
-  unique (tenant_id, job_id),
+  constraint evidence_queue_outbox_job_unique unique (tenant_id, job_id),
   constraint evidence_outbox_job_fk foreign key (tenant_id, job_id)
     references public.jobs(tenant_id, id) on delete cascade,
   constraint evidence_outbox_version_fk foreign key (tenant_id, evidence_version_id)

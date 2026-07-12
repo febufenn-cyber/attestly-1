@@ -129,7 +129,7 @@ begin
       'evidenceVersionId', version_row.id, 'objectId', object_row.id,
       'jobId', created_job.id, 'correlationId', p_correlation_id)
   )
-  on conflict (tenant_id, job_id) do update set available_at = now(), dispatched_at = null
+  on conflict on constraint evidence_queue_outbox_job_unique do update set available_at = now(), dispatched_at = null
   returning * into outbox_row;
 
   insert into public.audit_events (
