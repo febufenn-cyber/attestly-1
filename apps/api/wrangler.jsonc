@@ -1,0 +1,58 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "attestly-api-dev",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ENVIRONMENT": "development",
+    "EXPECTED_SUPABASE_PROJECT_REF": "local",
+    "WEB_BASE_URL": "http://127.0.0.1:5173",
+    "ALLOWED_ORIGIN": "http://127.0.0.1:5173",
+    "STORAGE_BUCKET": "attestly-evidence",
+  },
+  "queues": {
+    "producers": [
+      {
+        "binding": "OBJECT_QUEUE",
+        "queue": "attestly-object-jobs-dev",
+      },
+    ],
+  },
+  "env": {
+    "staging": {
+      "name": "attestly-api-staging",
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "WEB_BASE_URL": "https://staging.attestly.example",
+        "ALLOWED_ORIGIN": "https://staging.attestly.example",
+        "STORAGE_BUCKET": "attestly-evidence",
+      },
+      "queues": {
+        "producers": [
+          {
+            "binding": "OBJECT_QUEUE",
+            "queue": "attestly-object-jobs-staging",
+          },
+        ],
+      },
+    },
+    "production": {
+      "name": "attestly-api-production",
+      "vars": {
+        "ENVIRONMENT": "production",
+        "WEB_BASE_URL": "https://app.attestly.example",
+        "ALLOWED_ORIGIN": "https://app.attestly.example",
+        "STORAGE_BUCKET": "attestly-evidence",
+      },
+      "queues": {
+        "producers": [
+          {
+            "binding": "OBJECT_QUEUE",
+            "queue": "attestly-object-jobs-production",
+          },
+        ],
+      },
+    },
+  },
+}

@@ -10,43 +10,91 @@ Security, sales engineering, privacy, and legal teams repeatedly reconstruct ans
 
 Attestly is an evidence-grounded drafting and review system. It is not an auditor, certification provider, legal adviser, or autonomous source of company truth.
 
-## Phase 1 specification
+## Implementation status
 
-The original seed has been converted into a detailed product constitution and build specification:
+### Phase 1 — Product constitution
 
-- [Phase 1 index](./docs/phase-1/README.md)
-- [Product requirements](./docs/phase-1/PRODUCT_REQUIREMENTS.md)
-- [Product and AI constitution](./docs/phase-1/PRODUCT_CONSTITUTION.md)
-- [Canonical domain model](./docs/phase-1/DOMAIN_MODEL.md)
-- [Questionnaire import/export specification](./docs/phase-1/QUESTIONNAIRE_AND_EXPORT_SPEC.md)
-- [Security, privacy, and threat model](./docs/phase-1/SECURITY_PRIVACY_THREAT_MODEL.md)
-- [Roles, approvals, and audit controls](./docs/phase-1/ROLES_APPROVALS_AND_AUDIT.md)
-- [Evaluation and launch gates](./docs/phase-1/EVALUATION_AND_LAUNCH_GATES.md)
-- [MVP scope and exit criteria](./docs/phase-1/MVP_SCOPE_AND_EXIT_CRITERIA.md)
-- [Architecture Decision Records](./docs/phase-1/ADRs/)
+The product, evidence, workflow, security, evaluation, and launch contracts are defined in [`docs/phase-1/`](./docs/phase-1/README.md).
+
+### Phase 2 — Secure product foundation
+
+The secure vertical slice is implemented in [`docs/phase-2/`](./docs/phase-2/README.md):
+
+- React/Vite browser application with email magic-link authentication;
+- workspace creation, switching, membership roles, and one-time invitations;
+- Hono API on Cloudflare Workers with verified Supabase JWTs and application authorization;
+- Supabase Postgres schema, migrations, RLS, private Storage policies, and secure RPCs;
+- immutable, tenant-owned upload identities and signed direct uploads;
+- Cloudflare Queue worker with leasing, idempotency, retry classification, size/type validation, and SHA-256 hashing;
+- transactional job/outbox creation and scheduled outbox recovery;
+- append-only audit events with metadata redaction;
+- two-tenant pgTAP attack tests;
+- CI and protected manual staging deployment.
+
+Phase 2 is an engineering foundation, not approval to process real customer data. Malware scanning, production region and retention approval, subprocessor review, and external security validation remain required before beta.
+
+## Repository map
+
+```text
+apps/
+  web/        authentication, workspaces, invitations, uploads, lifecycle dashboard
+  api/        Hono request boundary, authorization, signed uploads, jobs, audit
+  worker/     queue consumer, object validation, hashing, retries, outbox recovery
+packages/
+  foundation/ shared schemas, permissions, job states, queue contracts, redaction
+supabase/
+  migrations/ tenant-safe schema, RLS, Storage policies, secure RPCs
+  tests/      two-tenant negative isolation suite
+docs/
+  phase-1/    product constitution and system definition
+  phase-2/    secure-foundation documentation and ADRs
+```
+
+## Local development
+
+Prerequisites: Node.js 22+ and a Docker-compatible runtime.
+
+```bash
+cp .env.example .env
+npm install
+npm run supabase:start
+npm run supabase:reset
+npm run db:test
+npm run dev:api
+npm run dev:worker
+npm run dev:web
+```
+
+Use the local credentials returned by `supabase status`. Service-role credentials belong only in `apps/api/.dev.vars` and `apps/worker/.dev.vars`; never expose them through a `VITE_` variable.
+
+## Verification
+
+```bash
+npm run format:check
+npm run typecheck
+npm run test
+npm run build
+npm run db:test
+```
 
 ## MVP scope
 
-- [ ] Secure multi-tenant workspaces, authentication, roles, and audit trail
-- [ ] Versioned evidence upload, extraction, scoping, approval, and retrieval
+- [x] Secure multi-tenant workspaces, authentication, membership roles, immutable upload foundation, jobs, and audit trail
+- [ ] Versioned evidence extraction, scoping, approval, and retrieval
 - [ ] XLSX/CSV questionnaire import with compatibility and mapping review
 - [ ] Compound-question decomposition and claim-level evidence retrieval
 - [ ] Structured AI drafts with exact citations and explanatory answer states
 - [ ] Human review, risk-based approvals, and approval invalidation after material edits
 - [ ] Structure-preserving export from a frozen approved snapshot
-- [ ] Evaluation harness, adversarial tests, retention, and deletion controls
+- [ ] Full adversarial evaluation, retention/deletion operations, billing, and production hardening
 
 The MVP does **not** autonomously submit questionnaire answers to external portals.
 
 ## Architecture direction
 
-The proposed implementation direction remains Cloudflare Workers + Hono and Supabase (Postgres, Auth, RLS, object storage, and pgvector), deployed with Wrangler.
+The foundation uses Cloudflare Workers + Hono and Supabase Auth, Postgres, RLS, private object storage, and later pgvector, deployed through Wrangler.
 
-The agent core is provider-neutral. Claude or another approved model provider may be selected through configuration after evaluation; evidence rules, tenant isolation, answer states, validators, and approval requirements live outside model prompts.
-
-**Planned integrations:** model provider; Google Drive; Stripe.
-
-**Core data:** versioned evidence corpus, scoped claims, questionnaire snapshots, answer revisions, citations, approvals, and immutable audit events.
+The agent core remains provider-neutral. Model selection is configuration; tenant isolation, evidence rules, answer states, validators, and approvals stay outside model prompts.
 
 ## Business hypothesis
 
@@ -57,13 +105,13 @@ The agent core is provider-neutral. Claude or another approved model provider ma
 | Initial ICP | Approximately 20–300 employees, enterprise buyers, existing evidence, limited GRC staffing |
 | GTM wedge | Controlled first-questionnaire pilot with measurable reviewer time saved |
 | Competition risk | High: active AI-compliance market |
-| Primary trust risk | Unsupported, stale, wrong-scope, or over-disclosed answers |
+| Primary trust risk | Unsupported, stale, wrong-scope, cross-tenant, or over-disclosed answers |
 | India angle | Helps Indian vendors complete US and international buyer security reviews faster |
 
 ## Delivery phases
 
-1. **Product constitution and system definition** — implemented in `docs/phase-1/`.
-2. **Secure project foundation** — schema, RLS, auth, storage, jobs, audit, CI/CD.
+1. **Product constitution and system definition** — implemented.
+2. **Secure product foundation** — implemented as a pre-beta vertical slice.
 3. **Evidence ingestion and retrieval.**
 4. **Questionnaire normalization and structure-preserving import/export.**
 5. **Evidence-grounded answer engine.**

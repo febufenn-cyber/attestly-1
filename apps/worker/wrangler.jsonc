@@ -1,0 +1,82 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "attestly-object-worker-dev",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ENVIRONMENT": "development",
+    "EXPECTED_SUPABASE_PROJECT_REF": "local",
+    "STORAGE_BUCKET": "attestly-evidence",
+  },
+  "queues": {
+    "producers": [
+      {
+        "binding": "OBJECT_QUEUE",
+        "queue": "attestly-object-jobs-dev",
+      },
+    ],
+    "consumers": [
+      {
+        "queue": "attestly-object-jobs-dev",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "attestly-object-jobs-dead-dev",
+      },
+    ],
+  },
+  "triggers": {
+    "crons": ["*/1 * * * *"],
+  },
+  "env": {
+    "staging": {
+      "name": "attestly-object-worker-staging",
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "STORAGE_BUCKET": "attestly-evidence",
+      },
+      "queues": {
+        "producers": [
+          {
+            "binding": "OBJECT_QUEUE",
+            "queue": "attestly-object-jobs-staging",
+          },
+        ],
+        "consumers": [
+          {
+            "queue": "attestly-object-jobs-staging",
+            "max_batch_size": 10,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "dead_letter_queue": "attestly-object-jobs-dead-staging",
+          },
+        ],
+      },
+    },
+    "production": {
+      "name": "attestly-object-worker-production",
+      "vars": {
+        "ENVIRONMENT": "production",
+        "STORAGE_BUCKET": "attestly-evidence",
+      },
+      "queues": {
+        "producers": [
+          {
+            "binding": "OBJECT_QUEUE",
+            "queue": "attestly-object-jobs-production",
+          },
+        ],
+        "consumers": [
+          {
+            "queue": "attestly-object-jobs-production",
+            "max_batch_size": 10,
+            "max_batch_timeout": 5,
+            "max_retries": 5,
+            "dead_letter_queue": "attestly-object-jobs-dead-production",
+          },
+        ],
+      },
+    },
+  },
+}

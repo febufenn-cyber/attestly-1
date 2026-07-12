@@ -1,0 +1,3 @@
+-- Intentionally empty.
+-- Phase 2 test tenants are created transactionally by supabase/tests/001_tenant_isolation.sql.
+-- Never seed real customer evidence into shared development environments.
