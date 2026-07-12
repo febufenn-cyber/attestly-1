@@ -270,8 +270,7 @@ create table public.evidence_spans (
   source_location jsonb not null,
   content_hash text not null check (content_hash ~ '^[a-f0-9]{64}$'),
   search_document tsvector generated always as (
-    setweight(to_tsvector('english', coalesce(array_to_string(heading_path, ' '), '')), 'A')
-    || setweight(to_tsvector('english', coalesce(normalized_text, '')), 'B')
+    setweight(to_tsvector('english'::regconfig, coalesce(normalized_text, '')), 'B')
   ) stored,
   created_at timestamptz not null default now(),
   primary key (tenant_id, id),
