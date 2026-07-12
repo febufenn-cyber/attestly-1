@@ -1,0 +1,85 @@
+name: Deploy Phase 4 staging
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: attestly-phase4-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Verify complete stack
+        run: npm run check
+      - name: Build questionnaire processor container
+        run: docker build -f apps/questionnaire-processor/Dockerfile -t attestly-questionnaire-processor:${{ github.sha }} .
+      - name: Link staging Supabase
+        run: npx supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      - name: Apply reviewed migrations
+        run: npx supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      - name: Configure Questionnaire API secrets
+        shell: bash
+        run: |
+          printf '%s' "$SUPABASE_URL" | npx wrangler secret put SUPABASE_URL --config apps/questionnaire-api/wrangler.jsonc --env staging
+          printf '%s' "$SUPABASE_ANON_KEY" | npx wrangler secret put SUPABASE_ANON_KEY --config apps/questionnaire-api/wrangler.jsonc --env staging
+          printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY --config apps/questionnaire-api/wrangler.jsonc --env staging
+          printf '%s' "$SUPABASE_PROJECT_REF" | npx wrangler secret put EXPECTED_SUPABASE_PROJECT_REF --config apps/questionnaire-api/wrangler.jsonc --env staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      - name: Configure Questionnaire Worker secrets
+        shell: bash
+        run: |
+          printf '%s' "$SUPABASE_URL" | npx wrangler secret put SUPABASE_URL --config apps/questionnaire-worker/wrangler.jsonc --env staging
+          printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY --config apps/questionnaire-worker/wrangler.jsonc --env staging
+          printf '%s' "$SUPABASE_PROJECT_REF" | npx wrangler secret put EXPECTED_SUPABASE_PROJECT_REF --config apps/questionnaire-worker/wrangler.jsonc --env staging
+          printf '%s' "$PROCESSOR_INTERNAL_TOKEN" | npx wrangler secret put PROCESSOR_INTERNAL_TOKEN --config apps/questionnaire-worker/wrangler.jsonc --env staging
+          printf '%s' "$PROCESSOR_URL" | npx wrangler secret put PROCESSOR_URL --config apps/questionnaire-worker/wrangler.jsonc --env staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          PROCESSOR_INTERNAL_TOKEN: ${{ secrets.PROCESSOR_INTERNAL_TOKEN }}
+          PROCESSOR_URL: ${{ vars.PROCESSOR_URL }}
+      - name: Deploy Questionnaire API and Worker
+        run: |
+          npx wrangler deploy --config apps/questionnaire-api/wrangler.jsonc --env staging
+          npx wrangler deploy --config apps/questionnaire-worker/wrangler.jsonc --env staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Build and deploy questionnaire console
+        run: |
+          npm run build:questionnaire-console
+          npx wrangler deploy --config apps/questionnaire-console/wrangler.jsonc --env staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          VITE_QUESTIONNAIRE_API_URL: ${{ vars.QUESTIONNAIRE_API_URL }}
