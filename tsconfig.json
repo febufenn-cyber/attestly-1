@@ -15,7 +15,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals", "vite/client", "node"]
   },
   "include": ["apps/**/*.ts", "apps/**/*.tsx", "packages/**/*.ts"],
   "exclude": ["dist", "node_modules"]
