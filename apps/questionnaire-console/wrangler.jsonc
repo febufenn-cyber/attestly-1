@@ -1,0 +1,13 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "attestly-questionnaire-console-dev",
+  "compatibility_date": "2026-07-12",
+  "assets": {
+    "directory": "../../dist/questionnaire-console",
+    "not_found_handling": "single-page-application"
+  },
+  "env": {
+    "staging": { "name": "attestly-questionnaire-console-staging" },
+    "production": { "name": "attestly-questionnaire-console-production" }
+  }
+}
