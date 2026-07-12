@@ -1,0 +1,6 @@
+dist
+node_modules
+.supabase
+.wrangler
+coverage
+packages/foundation/src/database.types.ts
