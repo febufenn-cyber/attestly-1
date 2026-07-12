@@ -81,7 +81,11 @@ jobs:
       - name: Install Supabase CLI
         run: npm install
       - name: Start isolated local Supabase
-        run: npx supabase start
+        run: |
+          npx supabase start > database-start.log 2>&1 || {
+            cat database-start.log
+            exit 1
+          }
       - name: Rebuild database from migrations
         run: |
           npx supabase db reset > database-reset.log 2>&1 || {
@@ -100,6 +104,7 @@ jobs:
         with:
           name: database-diagnostics
           path: |
+            database-start.log
             database-reset.log
             database-test.log
           if-no-files-found: ignore
