@@ -1,0 +1,82 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "attestly-questionnaire-worker-dev",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ENVIRONMENT": "development",
+    "EXPECTED_SUPABASE_PROJECT_REF": "local",
+    "PROCESSOR_URL": "http://127.0.0.1:8090"
+  },
+  "queues": {
+    "producers": [
+      {
+        "binding": "QUESTIONNAIRE_QUEUE",
+        "queue": "attestly-questionnaire-jobs-dev"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "attestly-questionnaire-jobs-dev",
+        "max_batch_size": 5,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "attestly-questionnaire-jobs-dead-dev"
+      }
+    ]
+  },
+  "triggers": {
+    "crons": ["*/1 * * * *"]
+  },
+  "env": {
+    "staging": {
+      "name": "attestly-questionnaire-worker-staging",
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "PROCESSOR_URL": "https://questionnaire-processor-staging.attestly.example"
+      },
+      "queues": {
+        "producers": [
+          {
+            "binding": "QUESTIONNAIRE_QUEUE",
+            "queue": "attestly-questionnaire-jobs-staging"
+          }
+        ],
+        "consumers": [
+          {
+            "queue": "attestly-questionnaire-jobs-staging",
+            "max_batch_size": 5,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "dead_letter_queue": "attestly-questionnaire-jobs-dead-staging"
+          }
+        ]
+      }
+    },
+    "production": {
+      "name": "attestly-questionnaire-worker-production",
+      "vars": {
+        "ENVIRONMENT": "production",
+        "PROCESSOR_URL": "https://questionnaire-processor.attestly.example"
+      },
+      "queues": {
+        "producers": [
+          {
+            "binding": "QUESTIONNAIRE_QUEUE",
+            "queue": "attestly-questionnaire-jobs-production"
+          }
+        ],
+        "consumers": [
+          {
+            "queue": "attestly-questionnaire-jobs-production",
+            "max_batch_size": 5,
+            "max_batch_timeout": 5,
+            "max_retries": 5,
+            "dead_letter_queue": "attestly-questionnaire-jobs-dead-production"
+          }
+        ]
+      }
+    }
+  }
+}
