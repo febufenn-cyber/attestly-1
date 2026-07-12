@@ -34,6 +34,7 @@ create temporary table phase3_ids (
   job_id uuid,
   outbox_id uuid
 );
+grant select, insert, update on phase3_ids to authenticated;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '31000000-0000-0000-0000-000000000002', true);
