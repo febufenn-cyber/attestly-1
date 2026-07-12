@@ -4,11 +4,8 @@
     "noEmit": false,
     "outDir": "../../dist/questionnaire-processor",
     "rootDir": "../..",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "declaration": false,
-    "sourceMap": true
+    "types": ["node"]
   },
-  "include": ["src/**/*.ts", "../../packages/questionnaire/src/index.ts"],
-  "exclude": ["src/**/*.test.ts"]
+  "include": ["src/**/*.ts", "../../packages/questionnaire/src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts", "../../packages/**/*.test.ts"]
 }
