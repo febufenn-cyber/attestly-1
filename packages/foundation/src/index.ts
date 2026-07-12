@@ -133,7 +133,11 @@ export const AcceptInvitationInputSchema = z.object({
 export const CreateUploadIntentInputSchema = z.object({
   fileName: z.string().trim().min(1).max(255),
   mimeType: z.string().trim().min(1).max(150),
-  sizeBytes: z.number().int().positive().max(25 * 1024 * 1024),
+  sizeBytes: z
+    .number()
+    .int()
+    .positive()
+    .max(25 * 1024 * 1024),
 });
 
 export const CompleteUploadInputSchema = z.object({
@@ -165,7 +169,8 @@ export function redactMetadata(value: unknown, depth = 0): unknown {
   if (depth > 6) return '[depth-limited]';
   if (value === null || typeof value === 'boolean' || typeof value === 'number') return value;
   if (typeof value === 'string') return value.length > 512 ? `${value.slice(0, 512)}…` : value;
-  if (Array.isArray(value)) return value.slice(0, 50).map((item) => redactMetadata(item, depth + 1));
+  if (Array.isArray(value))
+    return value.slice(0, 50).map((item) => redactMetadata(item, depth + 1));
   if (typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>).map(([key, item]) => [

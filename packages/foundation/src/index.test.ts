@@ -24,9 +24,11 @@ describe('job state machine', () => {
 
 describe('contracts and redaction', () => {
   it('rejects unsafe slugs and redacts nested secrets', () => {
-    expect(() => CreateOrganizationInputSchema.parse({ name: 'Acme', slug: 'Acme Corp' })).toThrow();
-    expect(
-      redactMetadata({ nested: { authorization: 'Bearer abc', safe: 'kept' } }),
-    ).toEqual({ nested: { authorization: '[redacted]', safe: 'kept' } });
+    expect(() =>
+      CreateOrganizationInputSchema.parse({ name: 'Acme', slug: 'Acme Corp' }),
+    ).toThrow();
+    expect(redactMetadata({ nested: { authorization: 'Bearer abc', safe: 'kept' } })).toEqual({
+      nested: { authorization: '[redacted]', safe: 'kept' },
+    });
   });
 });
