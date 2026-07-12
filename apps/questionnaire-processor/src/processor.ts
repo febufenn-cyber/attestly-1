@@ -327,7 +327,7 @@ export async function inspectXlsx(source: ArrayBuffer, sourceSha256: string): Pr
       accumulator[String(merge)] = true;
       return accumulator;
     }, {}));
-    if (worksheet.model.sheetProtection) inventory.protectedSheets.push(worksheet.name);
+    if (Boolean((worksheet.model as unknown as { sheetProtection?: unknown }).sheetProtection)) inventory.protectedSheets.push(worksheet.name);
 
     worksheet.eachRow({ includeEmpty: false }, (row) => {
       if (row.hidden) inventory.hiddenRows[worksheet.name]?.push(row.number);
@@ -413,7 +413,7 @@ export async function inspectXlsx(source: ArrayBuffer, sourceSha256: string): Pr
       const allowedValues = answerCell ? extractAllowedValues(answerCell) : [];
       const atomicRequests = decomposeCompoundQuestion(originalText);
       const formulaPresent = Boolean(answerCell && typeof answerCell.value === 'object' && answerCell.value && 'formula' in answerCell.value);
-      const protectedDestination = Boolean(worksheet.model.sheetProtection && answerCell?.protection.locked !== false);
+      const protectedDestination = Boolean((worksheet.model as unknown as { sheetProtection?: unknown }).sheetProtection && answerCell?.protection.locked !== false);
       const sourceLocation: SourceLocation = {
         format: 'xlsx',
         sheetName: worksheet.name,
