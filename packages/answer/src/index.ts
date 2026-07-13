@@ -229,7 +229,9 @@ function normalizeComparable(value: string): string {
 function quantifierSet(value: string): Set<string> {
   const matches = value
     .toLowerCase()
-    .match(/\b(all|always|every|any|some|generally|where applicable|at least|without exception)\b/g);
+    .match(
+      /\b(all|always|every|any|some|generally|where applicable|at least|without exception)\b/g,
+    );
   return new Set(matches ?? []);
 }
 
@@ -291,24 +293,45 @@ export function calculateConfidence(
   candidates: EvidenceCandidate[],
   state: AnswerState,
 ): ConfidenceDimensions {
-  const citedIds = new Set(claims.flatMap((claim) => claim.citations.map((citation) => citation.spanId)));
+  const citedIds = new Set(
+    claims.flatMap((claim) => claim.citations.map((citation) => citation.spanId)),
+  );
   const cited = candidates.filter((candidate) => citedIds.has(candidate.spanId));
   const material = claims.filter((claim) => claim.materiality === 'material');
   const claimSet = material.length > 0 ? material : claims;
   const supported = claimSet.filter((claim) => claim.disposition === 'supported').length;
   const citedClaims = claimSet.filter(
     (claim) =>
-      claim.disposition !== 'supported' || claim.citations.some((citation) => citation.role === 'supports'),
+      claim.disposition !== 'supported' ||
+      claim.citations.some((citation) => citation.role === 'supports'),
   ).length;
 
   const average = (values: number[], fallback: number) =>
     values.length > 0 ? values.reduce((sum, value) => sum + value, 0) / values.length : fallback;
-  const evidenceStrength = average(cited.map((item) => item.retrievalScore), 0);
-  const semanticRelevance = average(cited.map((item) => item.retrievalScore), 0);
-  const scopeMatch = average(cited.map((item) => scopeConfidence[item.scopeMatch]), 0);
-  const freshness = average(cited.map((item) => item.freshnessScore), 0);
-  const sourceAuthority = average(cited.map((item) => item.authorityScore), 0);
-  const extractionQuality = average(cited.map((item) => item.extractionQuality), 0);
+  const evidenceStrength = average(
+    cited.map((item) => item.retrievalScore),
+    0,
+  );
+  const semanticRelevance = average(
+    cited.map((item) => item.retrievalScore),
+    0,
+  );
+  const scopeMatch = average(
+    cited.map((item) => scopeConfidence[item.scopeMatch]),
+    0,
+  );
+  const freshness = average(
+    cited.map((item) => item.freshnessScore),
+    0,
+  );
+  const sourceAuthority = average(
+    cited.map((item) => item.authorityScore),
+    0,
+  );
+  const extractionQuality = average(
+    cited.map((item) => item.extractionQuality),
+    0,
+  );
   const contradictionSafety = candidates.some((item) => item.contradiction) ? 0 : 1;
   const answerCompleteness = claimSet.length > 0 ? supported / claimSet.length : 0;
   const claimCitationAlignment = claimSet.length > 0 ? citedClaims / claimSet.length : 0;
@@ -413,7 +436,10 @@ export function validateDraft(
       const requestedQuantifiers = quantifierSet(request.normalizedClaim);
       const proposedQuantifiers = quantifierSet(output.proposedStatement);
       for (const quantifier of proposedQuantifiers) {
-        if (['all', 'always', 'every', 'without exception'].includes(quantifier) && !requestedQuantifiers.has(quantifier)) {
+        if (
+          ['all', 'always', 'every', 'without exception'].includes(quantifier) &&
+          !requestedQuantifiers.has(quantifier)
+        ) {
           errors.push(`broadened_quantifier:${output.claimLocalId}:${quantifier}`);
         }
       }
@@ -429,17 +455,17 @@ export function validateDraft(
     return request.materiality === 'material' && output?.disposition !== 'supported';
   });
   const normalizedValue = normalizeComparable(modelOutput.outwardValue ?? modelOutput.outwardText);
-  if (hasUnsupportedMaterial && /^(yes|y|true|compliant|implemented|fully implemented)$/.test(normalizedValue)) {
+  if (
+    hasUnsupportedMaterial &&
+    /^(yes|y|true|compliant|implemented|fully implemented)$/.test(normalizedValue)
+  ) {
     errors.push('unsupported_affirmative_answer');
   }
 
   return { passed: errors.length === 0, errors, warnings };
 }
 
-export function materializeDraft(
-  input: GenerationInput,
-  rawOutput: unknown,
-): DraftAnswer {
+export function materializeDraft(input: GenerationInput, rawOutput: unknown): DraftAnswer {
   const modelOutput = ModelDraftOutputSchema.parse(rawOutput);
   const validation = validateDraft(input, modelOutput);
   const candidateById = new Map(input.candidates.map((candidate) => [candidate.spanId, candidate]));
@@ -488,7 +514,11 @@ export function materializeDraft(
   const confidence = calculateConfidence(claims, input.candidates, state);
   const contradictions = input.candidates
     .filter((candidate) => candidate.contradiction)
-    .map((candidate) => candidate.contradictionSummary ?? `${candidate.documentTitle} contains conflicting evidence.`);
+    .map(
+      (candidate) =>
+        candidate.contradictionSummary ??
+        `${candidate.documentTitle} contains conflicting evidence.`,
+    );
   const missingInformation = claims.flatMap((claim) => claim.missingInformation);
   const requiredReviewers = new Set<ReviewerRole>(modelOutput.suggestedReviewers);
   if (state === 'contradicted' || state === 'scope_mismatch' || state === 'requires_sme') {

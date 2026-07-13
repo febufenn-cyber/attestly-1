@@ -233,7 +233,10 @@ describe('deterministic validation', () => {
   });
 
   it('rejects scope-mismatched evidence even when text is relevant', () => {
-    const result = validateDraft(input({ candidates: [candidate({ scopeMatch: 'mismatch' })] }), output());
+    const result = validateDraft(
+      input({ candidates: [candidate({ scopeMatch: 'mismatch' })] }),
+      output(),
+    );
     expect(result.errors.some((error) => error.startsWith('scope_mismatched_citation'))).toBe(true);
   });
 
@@ -245,7 +248,9 @@ describe('deterministic validation', () => {
       }),
       output(),
     );
-    expect(result.errors.some((error) => error.startsWith('disclosure_policy_violation'))).toBe(true);
+    expect(result.errors.some((error) => error.startsWith('disclosure_policy_violation'))).toBe(
+      true,
+    );
   });
 
   it('rejects an affirmative answer when any material claim lacks support', () => {
