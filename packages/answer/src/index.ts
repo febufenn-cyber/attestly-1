@@ -483,20 +483,21 @@ export function materializeDraft(input: GenerationInput, rawOutput: unknown): Dr
         missingInformation: ['A complete claim-level draft is required.'],
       };
     }
-    const citations: Citation[] = output.citationSpanIds
-      .map((spanId) => {
-        const candidate = candidateById.get(spanId);
-        const quote = output.citationQuotes[spanId];
-        if (!candidate || !quote) return null;
-        return {
+    const citations: Citation[] = [];
+    for (const spanId of output.citationSpanIds) {
+      const candidate = candidateById.get(spanId);
+      const quote = output.citationQuotes[spanId];
+      if (!candidate || !quote) continue;
+      citations.push(
+        CitationSchema.parse({
           spanId,
           evidenceVersionId: candidate.evidenceVersionId,
-          role: candidate.contradiction ? ('contradicts' as const) : ('supports' as const),
+          role: candidate.contradiction ? 'contradicts' : 'supports',
           quote,
           claimLocalId: request.localId,
-        };
-      })
-      .filter((citation): citation is Citation => citation !== null);
+        }),
+      );
+    }
     return ClaimDraftSchema.parse({
       claimLocalId: request.localId,
       originalClause: request.originalClause,

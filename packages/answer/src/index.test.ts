@@ -71,7 +71,13 @@ function input(overrides: Partial<GenerationInput> = {}): GenerationInput {
         blankAllowed: false,
         notApplicableAllowed: true,
       },
-      sourceLocation: { format: 'xlsx', sheetName: 'Security', cellRange: 'B12' },
+      sourceLocation: {
+        format: 'xlsx',
+        sheetName: 'Security',
+        cellRange: 'B12',
+        sectionPath: [],
+        neighbouringLabels: [],
+      },
       atomicRequests: [
         {
           localId: 'claim-1',
