@@ -106,7 +106,7 @@ insert into public.evidence_versions (
   index_status, malware_scan_status, extraction_quality, created_by, approved_by, approved_at
 ) values
   ('eaaaaaaa-0000-0000-0000-000000000001', 'eaaaaaaa-3200-0000-0000-000000000001', 'eaaaaaaa-3100-0000-0000-000000000001', 'eaaaaaaa-1000-0000-0000-000000000002', 'eaaaaaaa-3000-0000-0000-000000000001', '2026-Q2', repeat('c',64), current_date - 30, current_date + 300, 'approved', 'succeeded', 'ready', 'clean', 0.98, '51000000-0000-0000-0000-000000000002', '51000000-0000-0000-0000-000000000002', now()),
-  ('ebbbbbbb-0000-0000-0000-000000000001', 'ebbbbbbb-3200-0000-0000-000000000001', 'ebbbbbbb-3100-0000-0000-000000000001', 'ebbbbbbb-1000-0000-0000-000000000001', 'ebbbbbbb-3000-0000-0000-000000000001', '2026-Q2', repeat('d',64), current_date - 30, current_date + 300, 'approved', 'succeeded', 'ready', 'clean', 0.98, '52000000-0000-0000-000000000001', '52000000-0000-0000-0000-000000000001', now());
+  ('ebbbbbbb-0000-0000-0000-000000000001', 'ebbbbbbb-3200-0000-0000-000000000001', 'ebbbbbbb-3100-0000-0000-000000000001', 'ebbbbbbb-1000-0000-0000-000000000001', 'ebbbbbbb-3000-0000-0000-000000000001', '2026-Q2', repeat('d',64), current_date - 30, current_date + 300, 'approved', 'succeeded', 'ready', 'clean', 0.98, '52000000-0000-0000-0000-000000000001', '52000000-0000-0000-0000-000000000001', now());
 insert into public.extraction_runs (
   tenant_id, id, evidence_version_id, status, source_sha256, extractor_name,
   extractor_version, normalization_ruleset_version, completed_at
