@@ -1,0 +1,88 @@
+name: Phase 5 kernel type fix once
+
+on:
+  push:
+    branches:
+      - agent/phase-5-answer-kernel
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/phase-5-answer-kernel
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply deterministic type fixes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          index_path = Path('packages/answer/src/index.ts')
+          text = index_path.read_text()
+          old = """    const citations: Citation[] = output.citationSpanIds
+              .map((spanId) => {
+                const candidate = candidateById.get(spanId);
+                const quote = output.citationQuotes[spanId];
+                if (!candidate || !quote) return null;
+                return {
+                  spanId,
+                  evidenceVersionId: candidate.evidenceVersionId,
+                  role: candidate.contradiction ? ('contradicts' as const) : ('supports' as const),
+                  quote,
+                  claimLocalId: request.localId,
+                };
+              })
+              .filter((citation): citation is Citation => citation !== null);
+          """
+          new = """    const citations: Citation[] = [];
+              for (const spanId of output.citationSpanIds) {
+                const candidate = candidateById.get(spanId);
+                const quote = output.citationQuotes[spanId];
+                if (!candidate || !quote) continue;
+                citations.push(
+                  CitationSchema.parse({
+                    spanId,
+                    evidenceVersionId: candidate.evidenceVersionId,
+                    role: candidate.contradiction ? 'contradicts' : 'supports',
+                    quote,
+                    claimLocalId: request.localId,
+                  }),
+                );
+              }
+          """
+          if old not in text:
+              raise SystemExit('citation block not found')
+          index_path.write_text(text.replace(old, new))
+
+          test_path = Path('packages/answer/src/index.test.ts')
+          test_text = test_path.read_text()
+          old_test = "sourceLocation: { format: 'xlsx', sheetName: 'Security', cellRange: 'B12' },"
+          new_test = """sourceLocation: {
+                    format: 'xlsx',
+                    sheetName: 'Security',
+                    cellRange: 'B12',
+                    sectionPath: [],
+                    neighbouringLabels: [],
+                  },"""
+          if old_test not in test_text:
+              raise SystemExit('source location fixture not found')
+          test_path.write_text(test_text.replace(old_test, new_test))
+          PY
+      - run: npm install
+      - run: npx prettier --write packages/answer
+      - name: Commit fixes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/answer
+          git commit -m "Fix Phase 5 answer kernel types"
+          git push origin HEAD:agent/phase-5-answer-kernel
