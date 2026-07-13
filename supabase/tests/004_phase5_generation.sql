@@ -75,8 +75,7 @@ insert into public.questionnaire_atomic_requests (
 ) values (
   'eaaaaaaa-0000-0000-0000-000000000001', 'eaaaaaaa-2400-0000-0000-000000000001',
   'eaaaaaaa-2200-0000-0000-000000000001', 'question-1', 'claim-1', 1,
-  'review privileged access quarterly', 'Privileged access is reviewed quarterly.',
-  array['quarterly'], 'material'
+  'review privileged access quarterly', 'Privileged access is reviewed quarterly.', array['quarterly'], 'material'
 );
 insert into public.questionnaire_snapshots (
   tenant_id, id, questionnaire_artifact_id, mapping_version_id, snapshot_hash, status,
@@ -89,9 +88,7 @@ insert into public.questionnaire_snapshots (
   1, 1, '51000000-0000-0000-0000-000000000002'
 );
 
-insert into public.evidence_scopes (
-  tenant_id, id, mode, products, environments, regions, created_by
-) values
+insert into public.evidence_scopes (tenant_id, id, mode, products, environments, regions, created_by) values
   ('eaaaaaaa-0000-0000-0000-000000000001', 'eaaaaaaa-3000-0000-0000-000000000001', 'selected', array['Core SaaS'], array['production'], array['global'], '51000000-0000-0000-0000-000000000002'),
   ('ebbbbbbb-0000-0000-0000-000000000001', 'ebbbbbbb-3000-0000-0000-000000000001', 'selected', array['Core SaaS'], array['production'], array['global'], '52000000-0000-0000-0000-000000000001');
 insert into public.evidence_documents (
@@ -112,24 +109,20 @@ insert into public.extraction_runs (
   extractor_version, normalization_ruleset_version, completed_at
 ) values
   ('eaaaaaaa-0000-0000-0000-000000000001', 'eaaaaaaa-3300-0000-0000-000000000001', 'eaaaaaaa-3200-0000-0000-000000000001', 'succeeded', repeat('c',64), 'fixture', '1', '1', now()),
-  ('ebbbbbbb-0000-0000-0000-000000000001', 'ebbbbbbb-3300-0000-0000-000000000001', 'ebbbbbbb-3200-0000-0000-000000000001', 'succeeded', repeat('d',64), 'fixture', '1', '1', now());
+  ('ebbbbbbb-0000-0000-000000000001', 'ebbbbbbb-3300-0000-0000-000000000001', 'ebbbbbbb-3200-0000-0000-000000000001', 'succeeded', repeat('d',64), 'fixture', '1', '1', now());
 insert into public.evidence_spans (
-  tenant_id, id, evidence_version_id, extraction_run_id, local_id,
-  source_node_local_ids, text_content, normalized_text, page_number,
-  heading_path, extraction_method, extraction_confidence, source_location, content_hash
+  tenant_id, id, evidence_version_id, extraction_run_id, local_id, source_node_local_ids,
+  text_content, normalized_text, page_number, heading_path, extraction_method,
+  extraction_confidence, source_location, content_hash
 ) values
   ('eaaaaaaa-0000-0000-0000-000000000001', 'eaaaaaaa-3400-0000-0000-000000000001', 'eaaaaaaa-3200-0000-0000-000000000001', 'eaaaaaaa-3300-0000-0000-000000000001', 'span-1', array['node-1'], 'Privileged user access is reviewed quarterly by the security team.', 'privileged user access is reviewed quarterly by the security team.', 1, array['Access Review'], 'native_text', 0.98, '{"pageNumber":1}'::jsonb, repeat('f',64)),
-  ('ebbbbbbb-0000-0000-0000-000000000001', 'ebbbbbbb-3400-0000-0000-000000000001', 'ebbbbbbb-3200-0000-0000-000000000001', 'ebbbbbbb-3300-0000-0000-000000000001', 'span-1', array['node-1'], 'Privileged user access is reviewed quarterly by the security team.', 'privileged user access is reviewed quarterly by the security team.', 1, array['Access Review'], 'native_text', 0.98, '{"pageNumber":1}'::jsonb, repeat('9',64));
+  ('ebbbbbbb-0000-0000-000000000001', 'ebbbbbbb-3400-0000-0000-000000000001', 'ebbbbbbb-3200-0000-0000-000000000001', 'ebbbbbbb-3300-0000-0000-000000000001', 'span-1', array['node-1'], 'Privileged user access is reviewed quarterly by the security team.', 'privileged user access is reviewed quarterly by the security team.', 1, array['Access Review'], 'native_text', 0.98, '{"pageNumber":1}'::jsonb, repeat('9',64));
 
 create temporary table phase5_ids (
-  run_id uuid,
-  job_id uuid,
-  outbox_id uuid,
-  revision_id uuid,
-  blocked_run_id uuid,
-  blocked_revision_id uuid,
-  fabricated_run_id uuid
+  run_id uuid, job_id uuid, outbox_id uuid, revision_id uuid,
+  blocked_run_id uuid, blocked_revision_id uuid
 );
+insert into phase5_ids default values;
 grant select, insert, update on phase5_ids to authenticated;
 
 set local role authenticated;
@@ -137,10 +130,9 @@ select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001
 select set_config('request.jwt.claims', '{"sub":"51000000-0000-0000-0000-000000000001","email":"contributor-alpha@example.test","role":"authenticated"}', true);
 with requested as (
   select * from public.request_answer_generation(
-    'eaaaaaaa-0000-0000-0000-000000000001',
-    'eaaaaaaa-2500-0000-0000-000000000001',
-    'eaaaaaaa-2300-0000-0000-000000000001',
-    'internal_answer_draft', 'fixture', 'fixture-model', '1', 'phase5-v1', 1,
+    'eaaaaaaa-0000-0000-0000-000000000001', 'eaaaaaaa-2500-0000-0000-000000000001',
+    'eaaaaaaa-2300-0000-0000-000000000001', 'internal_answer_draft',
+    'fixture', 'fixture-model', '1', 'phase5-v1', 1,
     'eaaaaaaa-4000-4000-8000-000000000001'
   )
 )
@@ -148,99 +140,52 @@ update phase5_ids set run_id = requested.generation_run_id, job_id = requested.j
   outbox_id = requested.outbox_id from requested;
 select is((select count(*)::integer from public.generation_runs), 1, 'Contributor creates one tenant-bound generation run');
 select is((select type::text from public.jobs where id = (select job_id from phase5_ids)), 'generate_answer', 'Generation request creates a typed job');
-select throws_ok(
-  $$select count(*) from public.generation_queue_outbox$$,
-  '42501', null,
-  'Authenticated users receive a hard denial on the generation outbox'
-);
+select throws_ok($$select count(*) from public.generation_queue_outbox$$, '42501', null, 'Authenticated users cannot read generation outbox records');
 select is((select count(*)::integer from public.generation_runs), 1, 'Requester can read the own generation run');
 select throws_ok(
-  $$select * from public.request_answer_generation(
-    'ebbbbbbb-0000-0000-0000-000000000001',
-    gen_random_uuid(), gen_random_uuid(), 'internal_answer_draft',
-    'fixture', 'fixture-model', '1', 'phase5-v1', 1, gen_random_uuid()
-  )$$,
-  '42501', 'Answer generation permission required',
-  'A contributor cannot request work in another tenant'
+  $$select * from public.request_answer_generation('ebbbbbbb-0000-0000-0000-000000000001', gen_random_uuid(), gen_random_uuid(), 'internal_answer_draft', 'fixture', 'fixture-model', '1', 'phase5-v1', 1, gen_random_uuid())$$,
+  '42501', 'Answer generation permission required', 'Contributor cannot request work in another tenant'
 );
 reset role;
 
 select lives_ok(
   $$select public.persist_generation_input(
-    'eaaaaaaa-0000-0000-0000-000000000001',
-    (select run_id from phase5_ids), repeat('1',64),
-    jsonb_build_object(
-      'tenantId','eaaaaaaa-0000-0000-0000-000000000001',
-      'generationRunId',(select run_id from phase5_ids),
-      'questionnaireSnapshotId','eaaaaaaa-2500-0000-0000-000000000001',
-      'questionId','eaaaaaaa-2300-0000-0000-000000000001',
-      'snapshotHash',repeat('e',64)
-    ),
-    jsonb_build_array(jsonb_build_object(
-      'spanId','eaaaaaaa-3400-0000-0000-000000000001',
-      'evidenceVersionId','eaaaaaaa-3200-0000-0000-000000000001',
-      'candidateOrder',1,'retrievalScore',0.95,'scopeMatch','exact'
-    ))
+    'eaaaaaaa-0000-0000-0000-000000000001', (select run_id from phase5_ids), repeat('1',64),
+    jsonb_build_object('tenantId','eaaaaaaa-0000-0000-0000-000000000001','generationRunId',(select run_id from phase5_ids),'questionnaireSnapshotId','eaaaaaaa-2500-0000-0000-000000000001','questionId','eaaaaaaa-2300-0000-0000-000000000001','snapshotHash',repeat('e',64)),
+    jsonb_build_array(jsonb_build_object('spanId','eaaaaaaa-3400-0000-0000-000000000001','evidenceVersionId','eaaaaaaa-3200-0000-0000-000000000001','candidateOrder',1,'retrievalScore',0.95,'scopeMatch','exact'))
   )$$,
-  'Service persists an immutable input and candidate snapshot'
+  'Service persists immutable input and candidate snapshots'
 );
 select is((select count(*)::integer from public.generation_candidates), 1, 'One exact candidate is frozen for the run');
-select is((select status::text from public.generation_runs where id = (select run_id from phase5_ids)), 'generating', 'Input persistence advances the run to generating');
+select is((select status::text from public.generation_runs where id = (select run_id from phase5_ids)), 'generating', 'Input persistence advances the run');
 select throws_ok(
-  $$insert into public.generation_candidates (
-    tenant_id, generation_run_id, evidence_span_id, evidence_version_id, candidate_order, candidate_snapshot
-  ) values (
-    'eaaaaaaa-0000-0000-0000-000000000001', (select run_id from phase5_ids),
-    'ebbbbbbb-3400-0000-0000-000000000001', 'ebbbbbbb-3200-0000-0000-000000000001',
-    2, '{}'::jsonb
-  )$$,
-  '23503', null,
-  'Composite tenant keys reject a cross-tenant candidate'
+  $$insert into public.generation_candidates (tenant_id, generation_run_id, evidence_span_id, evidence_version_id, candidate_order, candidate_snapshot) values ('eaaaaaaa-0000-0000-0000-000000000001',(select run_id from phase5_ids),'ebbbbbbb-3400-0000-0000-000000000001','ebbbbbbb-3200-0000-0000-000000000001',2,'{}'::jsonb)$$,
+  '23514', 'Candidate span and evidence version do not match', 'Cross-tenant candidate is rejected before persistence'
 );
-select throws_ok(
-  $$update public.generation_runs set input_hash = repeat('2',64)
-    where id = (select run_id from phase5_ids)$$,
-  '42501', 'Generation input snapshot is immutable',
-  'Generation input cannot be rewritten after persistence'
-);
+select throws_ok($$update public.generation_runs set input_hash = repeat('2',64) where id = (select run_id from phase5_ids)$$, '42501', 'Generation input snapshot is immutable', 'Generation input cannot be rewritten');
 
 update phase5_ids set revision_id = public.complete_generation_run(
-  'eaaaaaaa-0000-0000-0000-000000000001',
-  (select run_id from phase5_ids),
+  'eaaaaaaa-0000-0000-0000-000000000001', (select run_id from phase5_ids),
   jsonb_build_object(
-    'tenantId','eaaaaaaa-0000-0000-0000-000000000001',
-    'generationRunId',(select run_id from phase5_ids),
-    'questionnaireSnapshotId','eaaaaaaa-2500-0000-0000-000000000001',
-    'questionId','eaaaaaaa-2300-0000-0000-000000000001',
-    'state','supported','outwardValue','Yes',
-    'outwardText','Yes. Privileged access is reviewed quarterly.',
+    'tenantId','eaaaaaaa-0000-0000-0000-000000000001','generationRunId',(select run_id from phase5_ids),
+    'questionnaireSnapshotId','eaaaaaaa-2500-0000-0000-000000000001','questionId','eaaaaaaa-2300-0000-0000-000000000001',
+    'state','supported','outwardValue','Yes','outwardText','Yes. Privileged access is reviewed quarterly.',
     'claims',jsonb_build_array(jsonb_build_object(
-      'claimLocalId','claim-1','originalClause','review privileged access quarterly',
-      'normalizedClaim','Privileged access is reviewed quarterly.',
-      'qualifiers',jsonb_build_array('quarterly'),'materiality','material',
-      'disposition','supported','proposedStatement','Privileged access is reviewed quarterly.',
-      'citations',jsonb_build_array(jsonb_build_object(
-        'spanId','eaaaaaaa-3400-0000-0000-000000000001',
-        'evidenceVersionId','eaaaaaaa-3200-0000-0000-000000000001',
-        'role','supports','quote','Privileged user access is reviewed quarterly by the security team.'
-      )),'reasons','[]'::jsonb,'missingInformation','[]'::jsonb
-    )),
-    'confidence',jsonb_build_object('overall',0.93),
-    'riskTier','medium','requiredReviewers',jsonb_build_array('security_reviewer'),
+      'claimLocalId','claim-1','originalClause','review privileged access quarterly','normalizedClaim','Privileged access is reviewed quarterly.',
+      'qualifiers',jsonb_build_array('quarterly'),'materiality','material','disposition','supported','proposedStatement','Privileged access is reviewed quarterly.',
+      'citations',jsonb_build_array(jsonb_build_object('spanId','eaaaaaaa-3400-0000-0000-000000000001','evidenceVersionId','eaaaaaaa-3200-0000-0000-000000000001','role','supports','quote','Privileged user access is reviewed quarterly by the security team.')),
+      'reasons','[]'::jsonb,'missingInformation','[]'::jsonb)),
+    'confidence',jsonb_build_object('overall',0.93),'riskTier','medium','requiredReviewers',jsonb_build_array('security_reviewer'),
     'limitations','[]'::jsonb,'contradictions','[]'::jsonb,'missingInformation','[]'::jsonb,
     'model',jsonb_build_object('provider','fixture','model','fixture-model','promptVersion','phase5-v1','schemaVersion',1),
     'deterministicValidation',jsonb_build_object('passed',true,'errors','[]'::jsonb,'warnings','[]'::jsonb)
   ), repeat('2',64)
 );
-select is((select count(*)::integer from public.answer_revisions), 1, 'Successful generation creates one immutable answer revision');
+select is((select count(*)::integer from public.answer_revisions), 1, 'Successful generation creates an immutable answer revision');
 select is((select count(*)::integer from public.answer_claims), 1, 'Atomic claim result is persisted');
 select is((select count(*)::integer from public.answer_citations), 1, 'Exact claim-level citation is persisted');
 select is((select status::text from public.generation_runs where id = (select run_id from phase5_ids)), 'succeeded', 'Validated output completes the run');
-select throws_ok(
-  $$update public.answer_revisions set outward_text = 'tampered'$$,
-  '42501', 'Generation provenance records are append-only',
-  'Generated answer revisions cannot be edited in place'
-);
+select throws_ok($$update public.answer_revisions set outward_text = 'tampered'$$, '42501', 'Generation provenance records are append-only', 'Generated revisions cannot be edited in place');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '52000000-0000-0000-0000-000000000001', true);
@@ -252,7 +197,7 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000002', true);
 select set_config('request.jwt.claims', '{"sub":"51000000-0000-0000-0000-000000000002","email":"reviewer-alpha@example.test","role":"authenticated"}', true);
-select is((select count(*)::integer from public.answer_revisions), 1, 'Security reviewer can read the generated revision');
+select is((select count(*)::integer from public.answer_revisions), 1, 'Security reviewer can read generated revisions');
 select is((select count(*)::integer from public.answer_citations), 1, 'Security reviewer can inspect exact citations');
 reset role;
 
@@ -261,41 +206,26 @@ select set_config('request.jwt.claim.sub', '51000000-0000-0000-0000-000000000001
 select set_config('request.jwt.claims', '{"sub":"51000000-0000-0000-0000-000000000001","email":"contributor-alpha@example.test","role":"authenticated"}', true);
 with requested as (
   select * from public.request_answer_generation(
-    'eaaaaaaa-0000-0000-0000-000000000001',
-    'eaaaaaaa-2500-0000-0000-000000000001',
-    'eaaaaaaa-2300-0000-0000-000000000001',
-    'internal_answer_draft', 'fixture', 'fixture-model', '1', 'phase5-blocked', 1,
-    'eaaaaaaa-4000-4000-8000-000000000002'
+    'eaaaaaaa-0000-0000-0000-000000000001','eaaaaaaa-2500-0000-0000-000000000001','eaaaaaaa-2300-0000-0000-000000000001',
+    'internal_answer_draft','fixture','fixture-model','1','phase5-blocked',1,'eaaaaaaa-4000-4000-8000-000000000002'
   )
 )
 update phase5_ids set blocked_run_id = requested.generation_run_id from requested;
 reset role;
 select public.persist_generation_input(
-  'eaaaaaaa-0000-0000-0000-000000000001', (select blocked_run_id from phase5_ids), repeat('3',64),
-  jsonb_build_object(
-    'tenantId','eaaaaaaa-0000-0000-0000-000000000001',
-    'generationRunId',(select blocked_run_id from phase5_ids),
-    'questionnaireSnapshotId','eaaaaaaa-2500-0000-0000-000000000001',
-    'questionId','eaaaaaaa-2300-0000-0000-000000000001','snapshotHash',repeat('e',64)
-  ), '[]'::jsonb
+  'eaaaaaaa-0000-0000-0000-000000000001',(select blocked_run_id from phase5_ids),repeat('3',64),
+  jsonb_build_object('tenantId','eaaaaaaa-0000-0000-0000-000000000001','generationRunId',(select blocked_run_id from phase5_ids),'questionnaireSnapshotId','eaaaaaaa-2500-0000-0000-000000000001','questionId','eaaaaaaa-2300-0000-0000-000000000001','snapshotHash',repeat('e',64)),
+  '[]'::jsonb
 );
 update phase5_ids set blocked_revision_id = public.complete_generation_run(
-  'eaaaaaaa-0000-0000-0000-000000000001', (select blocked_run_id from phase5_ids),
+  'eaaaaaaa-0000-0000-0000-000000000001',(select blocked_run_id from phase5_ids),
   jsonb_build_object(
-    'tenantId','eaaaaaaa-0000-0000-0000-000000000001',
-    'generationRunId',(select blocked_run_id from phase5_ids),
-    'questionnaireSnapshotId','eaaaaaaa-2500-0000-0000-000000000001',
-    'questionId','eaaaaaaa-2300-0000-0000-000000000001',
+    'tenantId','eaaaaaaa-0000-0000-0000-000000000001','generationRunId',(select blocked_run_id from phase5_ids),
+    'questionnaireSnapshotId','eaaaaaaa-2500-0000-0000-000000000001','questionId','eaaaaaaa-2300-0000-0000-000000000001',
     'state','blocked_from_automation','outwardValue',null,'outwardText','',
-    'claims',jsonb_build_array(jsonb_build_object(
-      'claimLocalId','claim-1','originalClause','review privileged access quarterly',
-      'normalizedClaim','Privileged access is reviewed quarterly.','qualifiers',jsonb_build_array('quarterly'),
-      'materiality','material','disposition','blocked','proposedStatement','',
-      'citations','[]'::jsonb,'reasons',jsonb_build_array('Validation failed'),'missingInformation','[]'::jsonb
-    )),
-    'confidence',jsonb_build_object('overall',0.1),'riskTier','high',
-    'requiredReviewers',jsonb_build_array('security_reviewer'),'limitations','[]'::jsonb,
-    'contradictions','[]'::jsonb,'missingInformation','[]'::jsonb,
+    'claims',jsonb_build_array(jsonb_build_object('claimLocalId','claim-1','originalClause','review privileged access quarterly','normalizedClaim','Privileged access is reviewed quarterly.','qualifiers',jsonb_build_array('quarterly'),'materiality','material','disposition','blocked','proposedStatement','','citations','[]'::jsonb,'reasons',jsonb_build_array('Validation failed'),'missingInformation','[]'::jsonb)),
+    'confidence',jsonb_build_object('overall',0.1),'riskTier','high','requiredReviewers',jsonb_build_array('security_reviewer'),
+    'limitations','[]'::jsonb,'contradictions','[]'::jsonb,'missingInformation','[]'::jsonb,
     'model',jsonb_build_object('provider','fixture','model','fixture-model','promptVersion','phase5-blocked','schemaVersion',1),
     'deterministicValidation',jsonb_build_object('passed',false,'errors',jsonb_build_array('fixture'),'warnings','[]'::jsonb)
   ), repeat('4',64)
@@ -303,7 +233,7 @@ update phase5_ids set blocked_revision_id = public.complete_generation_run(
 select is((select state::text from public.answer_revisions where id = (select blocked_revision_id from phase5_ids)), 'blocked_from_automation', 'Invalid output is retained only as blocked');
 select is((select outward_value from public.answer_revisions where id = (select blocked_revision_id from phase5_ids)), null, 'Blocked output stores no outward value');
 select is((select status::text from public.generation_runs where id = (select blocked_run_id from phase5_ids)), 'blocked', 'Blocked validation creates a terminal blocked run');
-select cmp_ok((select count(*) from public.audit_events where action = 'answer.generation_completed'), '>=', 2::bigint, 'Generation completion is audited without storing prompt content');
+select cmp_ok((select count(*) from public.audit_events where action = 'answer.generation_completed'), '>=', 2::bigint, 'Generation completion is audited without prompt content');
 
 select * from finish();
 rollback;
