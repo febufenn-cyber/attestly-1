@@ -1,0 +1,41 @@
+name: Phase 5 generation fixture fix
+
+on:
+  push:
+    branches:
+      - agent/phase-5-generation-domain
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/phase-5-generation-domain
+      - name: Correct Beta fixture UUID
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('supabase/tests/004_phase5_generation.sql')
+          text = path.read_text()
+          old = '52000000-0000-0000-000000000001'
+          new = '52000000-0000-0000-0000-000000000001'
+          count = text.count(old)
+          if count == 0:
+              raise SystemExit('fixture UUID not found')
+          path.write_text(text.replace(old, new))
+          print(f'replaced {count} fixture UUID occurrences')
+          PY
+      - name: Commit correction
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add supabase/tests/004_phase5_generation.sql
+          git commit -m "Fix Phase 5 generation fixture UUID"
+          git push origin HEAD:agent/phase-5-generation-domain
