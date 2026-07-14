@@ -28,16 +28,16 @@ This document does not authorize bypassing security, CI, review, migration, or p
 
 Attestly uses the original eight-phase roadmap.
 
-| Phase | Name | Status at creation of this document |
-|---|---|---|
-| 1 | Product specification and system design | Complete |
-| 2 | Project foundation | Complete |
-| 3 | Policy and evidence ingestion | Complete |
-| 4 | Questionnaire import and normalization | Complete |
-| 5 | Evidence-grounded answer generation | In progress |
-| 6 | Human review, approval, reuse, and export | Not started |
-| 7 | Production security, evaluation, integrations, and billing | Not started |
-| 8 | Beta, launch, and iteration | Not started |
+| Phase | Name                                                       | Status at creation of this document |
+| ----- | ---------------------------------------------------------- | ----------------------------------- |
+| 1     | Product specification and system design                    | Complete                            |
+| 2     | Project foundation                                         | Complete                            |
+| 3     | Policy and evidence ingestion                              | Complete                            |
+| 4     | Questionnaire import and normalization                     | Complete                            |
+| 5     | Evidence-grounded answer generation                        | In progress                         |
+| 6     | Human review, approval, reuse, and export                  | Not started                         |
+| 7     | Production security, evaluation, integrations, and billing | Not started                         |
+| 8     | Beta, launch, and iteration                                | Not started                         |
 
 Therefore:
 
