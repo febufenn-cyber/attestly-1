@@ -53,6 +53,20 @@ jobs:
           path: test.log
           if-no-files-found: ignore
           retention-days: 3
+      - name: Phase 5 adversarial evaluation
+        run: |
+          npm run eval:phase5 > phase5-evaluation.log 2>&1 || {
+            cat phase5-evaluation.log
+            exit 1
+          }
+      - name: Upload Phase 5 evaluation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase5-evaluation-report
+          path: reports/phase5-evaluation-report.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Build all deployable applications
         run: |
           npm run build > build.log 2>&1 || {
