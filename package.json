@@ -1,11 +1,9 @@
 {
   "name": "attestly",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": ">=22"
-  },
+  "engines": { "node": ">=22" },
   "scripts": {
     "dev:api": "wrangler dev --config apps/api/wrangler.jsonc",
     "dev:worker": "wrangler dev --config apps/worker/wrangler.jsonc",
@@ -18,7 +16,9 @@
     "dev:questionnaire-worker": "wrangler dev --config apps/questionnaire-worker/wrangler.jsonc",
     "dev:questionnaire-console": "vite --config apps/questionnaire-console/vite.config.ts",
     "dev:questionnaire-processor": "tsx apps/questionnaire-processor/src/server.ts",
-    "build": "npm run build:web && npm run build:api && npm run build:worker && npm run build:evidence-console && npm run build:evidence-api && npm run build:ingestion && npm run build:extractor && npm run build:questionnaire-console && npm run build:questionnaire-api && npm run build:questionnaire-worker && npm run build:questionnaire-processor",
+    "dev:answer-api": "wrangler dev --config apps/answer-api/wrangler.jsonc",
+    "dev:generation-worker": "wrangler dev --config apps/generation-worker/wrangler.jsonc",
+    "build": "npm run build:web && npm run build:api && npm run build:worker && npm run build:evidence-console && npm run build:evidence-api && npm run build:ingestion && npm run build:extractor && npm run build:questionnaire-console && npm run build:questionnaire-api && npm run build:questionnaire-worker && npm run build:questionnaire-processor && npm run build:answer-api && npm run build:generation-worker",
     "build:web": "vite build --config apps/web/vite.config.ts",
     "build:api": "wrangler deploy --dry-run --config apps/api/wrangler.jsonc --outdir dist/api",
     "build:worker": "wrangler deploy --dry-run --config apps/worker/wrangler.jsonc --outdir dist/worker",
@@ -30,6 +30,8 @@
     "build:questionnaire-api": "wrangler deploy --dry-run --config apps/questionnaire-api/wrangler.jsonc --outdir dist/questionnaire-api",
     "build:questionnaire-worker": "wrangler deploy --dry-run --config apps/questionnaire-worker/wrangler.jsonc --outdir dist/questionnaire-worker",
     "build:questionnaire-processor": "tsc -p apps/questionnaire-processor/tsconfig.json",
+    "build:answer-api": "wrangler deploy --dry-run --config apps/answer-api/wrangler.jsonc --outdir dist/answer-api",
+    "build:generation-worker": "wrangler deploy --dry-run --config apps/generation-worker/wrangler.jsonc --outdir dist/generation-worker",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
