@@ -53,7 +53,10 @@ export interface GenerationWorkerBindings {
 }
 
 class TerminalGenerationError extends Error {
-  constructor(readonly code: string, message: string) {
+  constructor(
+    readonly code: string,
+    message: string,
+  ) {
     super(message);
   }
 }
@@ -65,14 +68,22 @@ function dbClient(env: GenerationWorkerBindings): SupabaseClient {
 }
 
 function assertEnvironment(env: GenerationWorkerBindings): void {
-  const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'EXPECTED_SUPABASE_PROJECT_REF'] as const;
+  const required = [
+    'SUPABASE_URL',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'EXPECTED_SUPABASE_PROJECT_REF',
+  ] as const;
   for (const key of required) {
-    if (!env[key]) throw new TerminalGenerationError('environment_invalid', `Missing binding: ${key}`);
+    if (!env[key])
+      throw new TerminalGenerationError('environment_invalid', `Missing binding: ${key}`);
   }
   if (env.EXPECTED_SUPABASE_PROJECT_REF !== 'local') {
     const actual = new URL(env.SUPABASE_URL).hostname.split('.')[0];
     if (actual !== env.EXPECTED_SUPABASE_PROJECT_REF) {
-      throw new TerminalGenerationError('environment_mismatch', 'Worker is bound to the wrong Supabase project.');
+      throw new TerminalGenerationError(
+        'environment_mismatch',
+        'Worker is bound to the wrong Supabase project.',
+      );
     }
   }
 }
@@ -86,7 +97,10 @@ function sha256Json(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex');
 }
 
-async function leaseJob(db: SupabaseClient, message: GenerateAnswerMessage): Promise<string | undefined> {
+async function leaseJob(
+  db: SupabaseClient,
+  message: GenerateAnswerMessage,
+): Promise<string | undefined> {
   const leaseOwner = crypto.randomUUID();
   const { data, error } = await db.rpc('lease_job', {
     p_tenant_id: message.tenantId,
@@ -102,7 +116,9 @@ async function leaseJob(db: SupabaseClient, message: GenerateAnswerMessage): Pro
 async function generationContext(db: SupabaseClient, message: GenerateAnswerMessage) {
   const { data: run, error: runError } = await db
     .from('generation_runs')
-    .select('id, tenant_id, questionnaire_snapshot_id, mapping_version_id, question_id, job_id, operation, status, snapshot_hash, requested_scope, provider, model, model_version, prompt_version, schema_version, requested_by')
+    .select(
+      'id, tenant_id, questionnaire_snapshot_id, mapping_version_id, question_id, job_id, operation, status, snapshot_hash, requested_scope, provider, model, model_version, prompt_version, schema_version, requested_by',
+    )
     .eq('tenant_id', message.tenantId)
     .eq('id', message.generationRunId)
     .eq('job_id', message.jobId)
@@ -110,18 +126,44 @@ async function generationContext(db: SupabaseClient, message: GenerateAnswerMess
     .eq('question_id', message.questionId)
     .maybeSingle();
   if (runError) throw new Error(`generation_read_failed:${runError.code ?? 'unknown'}`);
-  if (!run) throw new TerminalGenerationError('generation_not_found', 'Queued generation run was not found in this tenant.');
-  if (['succeeded', 'blocked', 'failed_terminal', 'cancelled'].includes(run.status)) return { terminal: true as const, run };
-  const [{ data: question, error: questionError }, { data: atomicRequests, error: atomicError }] = await Promise.all([
-    db.from('questionnaire_questions').select('id, local_id, original_text, normalized_text, question_type, polarity, answer_format, source_location').eq('tenant_id', message.tenantId).eq('id', message.questionId).eq('mapping_version_id', run.mapping_version_id).maybeSingle(),
-    db.from('questionnaire_atomic_requests').select('local_id, sequence, original_clause, normalized_claim, qualifiers, materiality').eq('tenant_id', message.tenantId).eq('mapping_version_id', run.mapping_version_id).order('sequence'),
-  ]);
+  if (!run)
+    throw new TerminalGenerationError(
+      'generation_not_found',
+      'Queued generation run was not found in this tenant.',
+    );
+  if (['succeeded', 'blocked', 'failed_terminal', 'cancelled'].includes(run.status))
+    return { terminal: true as const, run };
+  const [{ data: question, error: questionError }, { data: atomicRequests, error: atomicError }] =
+    await Promise.all([
+      db
+        .from('questionnaire_questions')
+        .select(
+          'id, local_id, original_text, normalized_text, question_type, polarity, answer_format, source_location',
+        )
+        .eq('tenant_id', message.tenantId)
+        .eq('id', message.questionId)
+        .eq('mapping_version_id', run.mapping_version_id)
+        .maybeSingle(),
+      db
+        .from('questionnaire_atomic_requests')
+        .select('local_id, sequence, original_clause, normalized_claim, qualifiers, materiality')
+        .eq('tenant_id', message.tenantId)
+        .eq('mapping_version_id', run.mapping_version_id)
+        .order('sequence'),
+    ]);
   if (questionError || atomicError) throw new Error('generation_question_read_failed');
-  if (!question || !atomicRequests?.length) throw new TerminalGenerationError('generation_question_invalid', 'Frozen question or atomic claims are missing.');
+  if (!question || !atomicRequests?.length)
+    throw new TerminalGenerationError(
+      'generation_question_invalid',
+      'Frozen question or atomic claims are missing.',
+    );
   return { terminal: false as const, run, question, atomicRequests };
 }
 
-function retrievalQuery(question: { normalized_text: string }, atomicRequests: Array<{ normalized_claim: string }>) {
+function retrievalQuery(
+  question: { normalized_text: string },
+  atomicRequests: Array<{ normalized_claim: string }>,
+) {
   return [question.normalized_text, ...atomicRequests.map((item) => item.normalized_claim)]
     .join(' ')
     .replace(/\s+/g, ' ')
@@ -150,9 +192,10 @@ function candidateFromRow(row: Record<string, unknown>): EvidenceCandidate {
     retrievalScore: Number(row.final_rank),
     historical: Boolean(row.historical),
     contradiction: Number(row.contradiction_count ?? 0) > 0,
-    contradictionSummary: Number(row.contradiction_count ?? 0) > 0
-      ? 'Approved evidence relations indicate a contradiction involving this evidence version.'
-      : null,
+    contradictionSummary:
+      Number(row.contradiction_count ?? 0) > 0
+        ? 'Approved evidence relations indicate a contradiction involving this evidence version.'
+        : null,
   };
 }
 
@@ -197,7 +240,11 @@ function generationInput(
   });
 }
 
-async function recordUsage(db: SupabaseClient, message: GenerateAnswerMessage, usage: unknown): Promise<void> {
+async function recordUsage(
+  db: SupabaseClient,
+  message: GenerateAnswerMessage,
+  usage: unknown,
+): Promise<void> {
   const { error } = await db.rpc('record_generation_usage', {
     p_tenant_id: message.tenantId,
     p_generation_run_id: message.generationRunId,
@@ -206,7 +253,11 @@ async function recordUsage(db: SupabaseClient, message: GenerateAnswerMessage, u
   if (error) throw new Error(`generation_usage_failed:${error.code ?? 'unknown'}`);
 }
 
-async function completeGeneration(db: SupabaseClient, message: GenerateAnswerMessage, draft: unknown): Promise<void> {
+async function completeGeneration(
+  db: SupabaseClient,
+  message: GenerateAnswerMessage,
+  draft: unknown,
+): Promise<void> {
   const parsed = DraftAnswerSchema.parse(draft);
   const { error } = await db.rpc('complete_generation_run', {
     p_tenant_id: message.tenantId,
@@ -214,10 +265,17 @@ async function completeGeneration(db: SupabaseClient, message: GenerateAnswerMes
     p_draft: parsed,
     p_output_hash: sha256Json(parsed),
   });
-  if (error) throw new Error(`generation_complete_failed:${error.code ?? 'unknown'}:${error.message}`);
+  if (error)
+    throw new Error(`generation_complete_failed:${error.code ?? 'unknown'}:${error.message}`);
 }
 
-async function failGeneration(db: SupabaseClient, message: GenerateAnswerMessage, code: string, detail: string, retryable: boolean): Promise<void> {
+async function failGeneration(
+  db: SupabaseClient,
+  message: GenerateAnswerMessage,
+  code: string,
+  detail: string,
+  retryable: boolean,
+): Promise<void> {
   const { error } = await db.rpc('fail_generation_run', {
     p_tenant_id: message.tenantId,
     p_generation_run_id: message.generationRunId,
@@ -228,7 +286,11 @@ async function failGeneration(db: SupabaseClient, message: GenerateAnswerMessage
   if (error) throw new Error(`generation_failure_persist_failed:${error.code ?? 'unknown'}`);
 }
 
-async function processGeneration(env: GenerationWorkerBindings, raw: unknown, queueMessage: QueueMessage<unknown>): Promise<void> {
+async function processGeneration(
+  env: GenerationWorkerBindings,
+  raw: unknown,
+  queueMessage: QueueMessage<unknown>,
+): Promise<void> {
   assertEnvironment(env);
   const message = GenerateAnswerMessageSchema.parse(raw);
   const db = dbClient(env);
@@ -244,26 +306,41 @@ async function processGeneration(env: GenerationWorkerBindings, raw: unknown, qu
     else queueMessage.retry({ delaySeconds: 30 });
     return;
   }
-  const { data: job } = await db.from('jobs').select('attempt_count, max_attempts').eq('tenant_id', message.tenantId).eq('id', message.jobId).eq('lease_owner', leaseOwner).maybeSingle();
+  const { data: job } = await db
+    .from('jobs')
+    .select('attempt_count, max_attempts')
+    .eq('tenant_id', message.tenantId)
+    .eq('id', message.jobId)
+    .eq('lease_owner', leaseOwner)
+    .maybeSingle();
   const attempt = Math.max(1, Number(job?.attempt_count ?? 1));
   const maxAttempts = Math.max(1, Number(job?.max_attempts ?? 3));
 
   let input: GenerationInput | undefined;
   try {
     const query = retrievalQuery(context.question, context.atomicRequests);
-    const { data: candidateRows, error: retrievalError } = await db.rpc('search_evidence_for_generation', {
-      p_tenant_id: message.tenantId,
-      p_generation_run_id: message.generationRunId,
-      p_query: query,
-      p_limit: 12,
-    });
-    if (retrievalError) throw new Error(`generation_retrieval_failed:${retrievalError.code ?? 'unknown'}:${retrievalError.message}`);
-    const candidates = (candidateRows ?? []).map((row: Record<string, unknown>) => candidateFromRow(row));
+    const { data: candidateRows, error: retrievalError } = await db.rpc(
+      'search_evidence_for_generation',
+      {
+        p_tenant_id: message.tenantId,
+        p_generation_run_id: message.generationRunId,
+        p_query: query,
+        p_limit: 12,
+      },
+    );
+    if (retrievalError)
+      throw new Error(
+        `generation_retrieval_failed:${retrievalError.code ?? 'unknown'}:${retrievalError.message}`,
+      );
+    const candidates = (candidateRows ?? []).map((row: Record<string, unknown>) =>
+      candidateFromRow(row),
+    );
     input = generationInput(context, message, candidates);
     const inputHash = generationInputHash(input);
     const immutableCandidates = candidates.map((candidate, index) => ({
       ...candidate,
-      retrievalRunId: (candidateRows?.[index] as Record<string, unknown> | undefined)?.retrieval_run_id,
+      retrievalRunId: (candidateRows?.[index] as Record<string, unknown> | undefined)
+        ?.retrieval_run_id,
       candidateOrder: index + 1,
     }));
     const { error: persistError } = await db.rpc('persist_generation_input', {
@@ -273,15 +350,25 @@ async function processGeneration(env: GenerationWorkerBindings, raw: unknown, qu
       p_input_snapshot: input,
       p_candidates: immutableCandidates,
     });
-    if (persistError) throw new TerminalGenerationError('generation_input_persist_failed', `${persistError.code ?? 'unknown'}:${persistError.message}`);
+    if (persistError)
+      throw new TerminalGenerationError(
+        'generation_input_persist_failed',
+        `${persistError.code ?? 'unknown'}:${persistError.message}`,
+      );
 
     const provider = createModelProvider({
       provider: context.run.provider,
       anthropicApiKey: env.ANTHROPIC_API_KEY,
       model: context.run.model,
       endpoint: env.ANTHROPIC_ENDPOINT,
-      inputCostMicroUsdPerMillionTokens: positiveInteger(env.GENERATION_INPUT_COST_MICRO_USD_PER_MILLION_TOKENS, 0),
-      outputCostMicroUsdPerMillionTokens: positiveInteger(env.GENERATION_OUTPUT_COST_MICRO_USD_PER_MILLION_TOKENS, 0),
+      inputCostMicroUsdPerMillionTokens: positiveInteger(
+        env.GENERATION_INPUT_COST_MICRO_USD_PER_MILLION_TOKENS,
+        0,
+      ),
+      outputCostMicroUsdPerMillionTokens: positiveInteger(
+        env.GENERATION_OUTPUT_COST_MICRO_USD_PER_MILLION_TOKENS,
+        0,
+      ),
     });
     const timeoutMs = positiveInteger(env.GENERATION_TIMEOUT_MS, 60_000);
     const controller = new AbortController();
@@ -299,9 +386,13 @@ async function processGeneration(env: GenerationWorkerBindings, raw: unknown, qu
     const providerError = reason instanceof ProviderError ? reason : undefined;
     const terminalError = reason instanceof TerminalGenerationError ? reason : undefined;
     const schemaError = reason instanceof z.ZodError;
-    const code = providerError?.code ?? terminalError?.code ?? (schemaError ? 'provider_output_invalid' : 'generation_runtime_failure');
+    const code =
+      providerError?.code ??
+      terminalError?.code ??
+      (schemaError ? 'provider_output_invalid' : 'generation_runtime_failure');
     const detail = reason instanceof Error ? reason.message : 'Unknown generation failure.';
-    const retryable = providerError?.retryable ?? (!terminalError && !schemaError && attempt < maxAttempts);
+    const retryable =
+      providerError?.retryable ?? (!terminalError && !schemaError && attempt < maxAttempts);
     if (!retryable && input) {
       const blocked = blockedDraftForProviderFailure(input, code, detail);
       await completeGeneration(db, message, blocked);
@@ -309,7 +400,8 @@ async function processGeneration(env: GenerationWorkerBindings, raw: unknown, qu
       return;
     }
     await failGeneration(db, message, code, detail, retryable);
-    if (retryable && attempt < maxAttempts) queueMessage.retry({ delaySeconds: retryDelaySeconds(attempt) });
+    if (retryable && attempt < maxAttempts)
+      queueMessage.retry({ delaySeconds: retryDelaySeconds(attempt) });
     else queueMessage.ack();
   }
 }
@@ -317,15 +409,37 @@ async function processGeneration(env: GenerationWorkerBindings, raw: unknown, qu
 async function recoverOutbox(env: GenerationWorkerBindings): Promise<void> {
   assertEnvironment(env);
   const db = dbClient(env);
-  const { data, error } = await db.from('generation_queue_outbox').select('id, tenant_id, payload, dispatch_attempts').is('dispatched_at', null).lte('available_at', new Date().toISOString()).order('created_at').limit(100);
+  const { data, error } = await db
+    .from('generation_queue_outbox')
+    .select('id, tenant_id, payload, dispatch_attempts')
+    .is('dispatched_at', null)
+    .lte('available_at', new Date().toISOString())
+    .order('created_at')
+    .limit(100);
   if (error) throw new Error(`generation_outbox_read_failed:${error.code ?? 'unknown'}`);
   for (const row of data ?? []) {
     try {
       const payload = GenerateAnswerMessageSchema.parse(row.payload);
       await env.GENERATION_QUEUE.send(payload);
-      await db.from('generation_queue_outbox').update({ dispatched_at: new Date().toISOString(), dispatch_attempts: (row.dispatch_attempts ?? 0) + 1, last_error: null }).eq('tenant_id', row.tenant_id).eq('id', row.id).is('dispatched_at', null);
+      await db
+        .from('generation_queue_outbox')
+        .update({
+          dispatched_at: new Date().toISOString(),
+          dispatch_attempts: (row.dispatch_attempts ?? 0) + 1,
+          last_error: null,
+        })
+        .eq('tenant_id', row.tenant_id)
+        .eq('id', row.id)
+        .is('dispatched_at', null);
     } catch (reason) {
-      await db.from('generation_queue_outbox').update({ dispatch_attempts: (row.dispatch_attempts ?? 0) + 1, last_error: reason instanceof Error ? reason.message.slice(0, 500) : 'queue error' }).eq('tenant_id', row.tenant_id).eq('id', row.id);
+      await db
+        .from('generation_queue_outbox')
+        .update({
+          dispatch_attempts: (row.dispatch_attempts ?? 0) + 1,
+          last_error: reason instanceof Error ? reason.message.slice(0, 500) : 'queue error',
+        })
+        .eq('tenant_id', row.tenant_id)
+        .eq('id', row.id);
     }
   }
 }
@@ -334,7 +448,11 @@ export default {
   async queue(batch: QueueBatch<unknown>, env: GenerationWorkerBindings): Promise<void> {
     for (const message of batch.messages) await processGeneration(env, message.body, message);
   },
-  async scheduled(_controller: ScheduledController, env: GenerationWorkerBindings, ctx: ExecutionContextLike): Promise<void> {
+  async scheduled(
+    _controller: ScheduledController,
+    env: GenerationWorkerBindings,
+    ctx: ExecutionContextLike,
+  ): Promise<void> {
     ctx.waitUntil(recoverOutbox(env));
   },
 };

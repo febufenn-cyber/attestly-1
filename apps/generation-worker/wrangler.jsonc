@@ -9,14 +9,14 @@
     "EXPECTED_SUPABASE_PROJECT_REF": "local",
     "GENERATION_TIMEOUT_MS": "60000",
     "GENERATION_INPUT_COST_MICRO_USD_PER_MILLION_TOKENS": "0",
-    "GENERATION_OUTPUT_COST_MICRO_USD_PER_MILLION_TOKENS": "0"
+    "GENERATION_OUTPUT_COST_MICRO_USD_PER_MILLION_TOKENS": "0",
   },
   "queues": {
     "producers": [
       {
         "binding": "GENERATION_QUEUE",
-        "queue": "attestly-generation-jobs-dev"
-      }
+        "queue": "attestly-generation-jobs-dev",
+      },
     ],
     "consumers": [
       {
@@ -24,12 +24,12 @@
         "max_batch_size": 5,
         "max_batch_timeout": 5,
         "max_retries": 3,
-        "dead_letter_queue": "attestly-generation-jobs-dead-dev"
-      }
-    ]
+        "dead_letter_queue": "attestly-generation-jobs-dead-dev",
+      },
+    ],
   },
   "triggers": {
-    "crons": ["*/1 * * * *"]
+    "crons": ["*/1 * * * *"],
   },
   "env": {
     "staging": {
@@ -38,14 +38,14 @@
         "ENVIRONMENT": "staging",
         "GENERATION_TIMEOUT_MS": "60000",
         "GENERATION_INPUT_COST_MICRO_USD_PER_MILLION_TOKENS": "3000000",
-        "GENERATION_OUTPUT_COST_MICRO_USD_PER_MILLION_TOKENS": "15000000"
+        "GENERATION_OUTPUT_COST_MICRO_USD_PER_MILLION_TOKENS": "15000000",
       },
       "queues": {
         "producers": [
           {
             "binding": "GENERATION_QUEUE",
-            "queue": "attestly-generation-jobs-staging"
-          }
+            "queue": "attestly-generation-jobs-staging",
+          },
         ],
         "consumers": [
           {
@@ -53,10 +53,10 @@
             "max_batch_size": 5,
             "max_batch_timeout": 5,
             "max_retries": 3,
-            "dead_letter_queue": "attestly-generation-jobs-dead-staging"
-          }
-        ]
-      }
+            "dead_letter_queue": "attestly-generation-jobs-dead-staging",
+          },
+        ],
+      },
     },
     "production": {
       "name": "attestly-generation-worker-production",
@@ -64,14 +64,14 @@
         "ENVIRONMENT": "production",
         "GENERATION_TIMEOUT_MS": "60000",
         "GENERATION_INPUT_COST_MICRO_USD_PER_MILLION_TOKENS": "3000000",
-        "GENERATION_OUTPUT_COST_MICRO_USD_PER_MILLION_TOKENS": "15000000"
+        "GENERATION_OUTPUT_COST_MICRO_USD_PER_MILLION_TOKENS": "15000000",
       },
       "queues": {
         "producers": [
           {
             "binding": "GENERATION_QUEUE",
-            "queue": "attestly-generation-jobs-production"
-          }
+            "queue": "attestly-generation-jobs-production",
+          },
         ],
         "consumers": [
           {
@@ -79,10 +79,10 @@
             "max_batch_size": 5,
             "max_batch_timeout": 5,
             "max_retries": 5,
-            "dead_letter_queue": "attestly-generation-jobs-dead-production"
-          }
-        ]
-      }
-    }
-  }
+            "dead_letter_queue": "attestly-generation-jobs-dead-production",
+          },
+        ],
+      },
+    },
+  },
 }

@@ -3,7 +3,9 @@
   "version": "0.4.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev:api": "wrangler dev --config apps/api/wrangler.jsonc",
     "dev:worker": "wrangler dev --config apps/worker/wrangler.jsonc",

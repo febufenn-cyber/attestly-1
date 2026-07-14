@@ -11,15 +11,15 @@
     "GENERATION_PROVIDER": "fake",
     "GENERATION_MODEL": "deterministic-fake-v1",
     "GENERATION_MODEL_VERSION": "1",
-    "GENERATION_PROMPT_VERSION": "phase5-v1"
+    "GENERATION_PROMPT_VERSION": "phase5-v1",
   },
   "queues": {
     "producers": [
       {
         "binding": "GENERATION_QUEUE",
-        "queue": "attestly-generation-jobs-dev"
-      }
-    ]
+        "queue": "attestly-generation-jobs-dev",
+      },
+    ],
   },
   "env": {
     "staging": {
@@ -30,16 +30,16 @@
         "GENERATION_PROVIDER": "anthropic",
         "GENERATION_MODEL": "claude-sonnet-4-5",
         "GENERATION_MODEL_VERSION": "20250929",
-        "GENERATION_PROMPT_VERSION": "phase5-v1"
+        "GENERATION_PROMPT_VERSION": "phase5-v1",
       },
       "queues": {
         "producers": [
           {
             "binding": "GENERATION_QUEUE",
-            "queue": "attestly-generation-jobs-staging"
-          }
-        ]
-      }
+            "queue": "attestly-generation-jobs-staging",
+          },
+        ],
+      },
     },
     "production": {
       "name": "attestly-answer-api-production",
@@ -49,16 +49,16 @@
         "GENERATION_PROVIDER": "anthropic",
         "GENERATION_MODEL": "claude-sonnet-4-5",
         "GENERATION_MODEL_VERSION": "20250929",
-        "GENERATION_PROMPT_VERSION": "phase5-v1"
+        "GENERATION_PROMPT_VERSION": "phase5-v1",
       },
       "queues": {
         "producers": [
           {
             "binding": "GENERATION_QUEUE",
-            "queue": "attestly-generation-jobs-production"
-          }
-        ]
-      }
-    }
-  }
+            "queue": "attestly-generation-jobs-production",
+          },
+        ],
+      },
+    },
+  },
 }

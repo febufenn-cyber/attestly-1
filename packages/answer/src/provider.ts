@@ -135,7 +135,11 @@ export class FakeModelProvider implements ModelProvider {
     });
     const allSupported = claims.every((claim) => claim.disposition === 'supported');
     const allUnsupported = claims.every((claim) => claim.disposition === 'unsupported');
-    const outwardValue = allSupported ? chooseAllowedValue(input, true) : allUnsupported ? null : null;
+    const outwardValue = allSupported
+      ? chooseAllowedValue(input, true)
+      : allUnsupported
+        ? null
+        : null;
     const outwardText = allSupported
       ? claims
           .map((claim) => claim.proposedStatement)
@@ -271,12 +275,20 @@ function extractJsonText(value: string): unknown {
     const start = unfenced.indexOf('{');
     const end = unfenced.lastIndexOf('}');
     if (start < 0 || end <= start) {
-      throw new ProviderError('provider_output_not_json', 'Provider returned no JSON object.', false);
+      throw new ProviderError(
+        'provider_output_not_json',
+        'Provider returned no JSON object.',
+        false,
+      );
     }
     try {
       return JSON.parse(unfenced.slice(start, end + 1));
     } catch {
-      throw new ProviderError('provider_output_malformed', 'Provider returned malformed JSON.', false);
+      throw new ProviderError(
+        'provider_output_malformed',
+        'Provider returned malformed JSON.',
+        false,
+      );
     }
   }
 }

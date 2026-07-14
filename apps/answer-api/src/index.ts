@@ -192,11 +192,14 @@ app.get('/v1/workspaces/:tenantId/snapshots', async (c) => {
   const client = userClient(c.env, c.get('accessToken'));
   const { data, error } = await client
     .from('questionnaire_snapshots')
-    .select('id, snapshot_hash, status, target_scope, question_count, atomic_request_count, frozen_at')
+    .select(
+      'id, snapshot_hash, status, target_scope, question_count, atomic_request_count, frozen_at',
+    )
     .eq('tenant_id', tenantId)
     .in('status', ['frozen', 'answering', 'review', 'approved'])
     .order('frozen_at', { ascending: false });
-  if (error) throw new AppError(500, 'snapshot_list_failed', 'Could not list questionnaire snapshots.');
+  if (error)
+    throw new AppError(500, 'snapshot_list_failed', 'Could not list questionnaire snapshots.');
   return c.json({ snapshots: data ?? [] });
 });
 
@@ -210,11 +213,14 @@ app.get('/v1/workspaces/:tenantId/snapshots/:snapshotId/questions', async (c) =>
     .eq('tenant_id', tenantId)
     .eq('id', snapshotId)
     .maybeSingle();
-  if (snapshotError) throw new AppError(500, 'snapshot_read_failed', 'Could not read the snapshot.');
+  if (snapshotError)
+    throw new AppError(500, 'snapshot_read_failed', 'Could not read the snapshot.');
   if (!snapshot) throw new AppError(404, 'not_found', 'Questionnaire snapshot was not found.');
   const { data, error } = await client
     .from('questionnaire_questions')
-    .select('id, local_id, original_text, normalized_text, question_type, polarity, display_order, answer_format, source_location')
+    .select(
+      'id, local_id, original_text, normalized_text, question_type, polarity, display_order, answer_format, source_location',
+    )
     .eq('tenant_id', tenantId)
     .eq('mapping_version_id', snapshot.mapping_version_id)
     .eq('inclusion_status', 'included')
@@ -223,35 +229,42 @@ app.get('/v1/workspaces/:tenantId/snapshots/:snapshotId/questions', async (c) =>
   return c.json({ questions: data ?? [] });
 });
 
-app.post('/v1/workspaces/:tenantId/snapshots/:snapshotId/questions/:questionId/generations', async (c) => {
-  const tenantId = IdSchema.parse(c.req.param('tenantId'));
-  const snapshotId = IdSchema.parse(c.req.param('snapshotId'));
-  const questionId = IdSchema.parse(c.req.param('questionId'));
-  const input = RequestAnswerGenerationSchema.parse(await c.req.json().catch(() => ({})));
-  const requestId = IdSchema.parse(c.get('requestId'));
-  const client = userClient(c.env, c.get('accessToken'));
-  const { data, error } = await client.rpc('request_answer_generation', {
-    p_tenant_id: tenantId,
-    p_questionnaire_snapshot_id: snapshotId,
-    p_question_id: questionId,
-    p_operation: input.operation,
-    p_provider: c.env.GENERATION_PROVIDER,
-    p_model: c.env.GENERATION_MODEL,
-    p_model_version: c.env.GENERATION_MODEL_VERSION || null,
-    p_prompt_version: c.env.GENERATION_PROMPT_VERSION,
-    p_schema_version: 1,
-    p_correlation_id: requestId,
-  });
-  if (error) {
-    throw new AppError(error.code === '42501' ? 403 : 400, 'generation_request_failed', error.message);
-  }
-  const result = Array.isArray(data) ? data[0] : data;
-  if (!result?.generation_run_id || !result?.outbox_id) {
-    throw new AppError(500, 'generation_job_missing', 'Generation run was not created.');
-  }
-  const queued = await dispatchOutbox(c.env, tenantId, result.outbox_id);
-  return c.json({ generationRunId: result.generation_run_id, jobId: result.job_id, queued }, 202);
-});
+app.post(
+  '/v1/workspaces/:tenantId/snapshots/:snapshotId/questions/:questionId/generations',
+  async (c) => {
+    const tenantId = IdSchema.parse(c.req.param('tenantId'));
+    const snapshotId = IdSchema.parse(c.req.param('snapshotId'));
+    const questionId = IdSchema.parse(c.req.param('questionId'));
+    const input = RequestAnswerGenerationSchema.parse(await c.req.json().catch(() => ({})));
+    const requestId = IdSchema.parse(c.get('requestId'));
+    const client = userClient(c.env, c.get('accessToken'));
+    const { data, error } = await client.rpc('request_answer_generation', {
+      p_tenant_id: tenantId,
+      p_questionnaire_snapshot_id: snapshotId,
+      p_question_id: questionId,
+      p_operation: input.operation,
+      p_provider: c.env.GENERATION_PROVIDER,
+      p_model: c.env.GENERATION_MODEL,
+      p_model_version: c.env.GENERATION_MODEL_VERSION || null,
+      p_prompt_version: c.env.GENERATION_PROMPT_VERSION,
+      p_schema_version: 1,
+      p_correlation_id: requestId,
+    });
+    if (error) {
+      throw new AppError(
+        error.code === '42501' ? 403 : 400,
+        'generation_request_failed',
+        error.message,
+      );
+    }
+    const result = Array.isArray(data) ? data[0] : data;
+    if (!result?.generation_run_id || !result?.outbox_id) {
+      throw new AppError(500, 'generation_job_missing', 'Generation run was not created.');
+    }
+    const queued = await dispatchOutbox(c.env, tenantId, result.outbox_id);
+    return c.json({ generationRunId: result.generation_run_id, jobId: result.job_id, queued }, 202);
+  },
+);
 
 app.get('/v1/workspaces/:tenantId/generations', async (c) => {
   const tenantId = IdSchema.parse(c.req.param('tenantId'));
@@ -259,7 +272,9 @@ app.get('/v1/workspaces/:tenantId/generations', async (c) => {
   const client = userClient(c.env, c.get('accessToken'));
   let query = client
     .from('generation_runs')
-    .select('id, questionnaire_snapshot_id, question_id, operation, status, provider, model, model_version, prompt_version, failure_code, created_at, started_at, completed_at, failed_at')
+    .select(
+      'id, questionnaire_snapshot_id, question_id, operation, status, provider, model, model_version, prompt_version, failure_code, created_at, started_at, completed_at, failed_at',
+    )
     .eq('tenant_id', tenantId)
     .order('created_at', { ascending: false })
     .limit(500);
@@ -275,18 +290,40 @@ app.get('/v1/workspaces/:tenantId/generations/:runId', async (c) => {
   const client = userClient(c.env, c.get('accessToken'));
   const { data: run, error } = await client
     .from('generation_runs')
-    .select('*, questionnaire_questions!inner(id, local_id, original_text, normalized_text, question_type, polarity, answer_format, source_location)')
+    .select(
+      '*, questionnaire_questions!inner(id, local_id, original_text, normalized_text, question_type, polarity, answer_format, source_location)',
+    )
     .eq('tenant_id', tenantId)
     .eq('id', runId)
     .maybeSingle();
   if (error) throw new AppError(500, 'generation_read_failed', 'Could not read generation run.');
   if (!run) throw new AppError(404, 'not_found', 'Generation run was not found.');
   const [{ data: candidates }, { data: revisions }, { data: usage }] = await Promise.all([
-    client.from('generation_candidates').select('*').eq('tenant_id', tenantId).eq('generation_run_id', runId).order('candidate_order'),
-    client.from('answer_revisions').select('*, answer_claims(*, answer_citations(*))').eq('tenant_id', tenantId).eq('generation_run_id', runId).order('revision_number'),
-    client.from('generation_provider_usage').select('*').eq('tenant_id', tenantId).eq('generation_run_id', runId).order('attempt'),
+    client
+      .from('generation_candidates')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .eq('generation_run_id', runId)
+      .order('candidate_order'),
+    client
+      .from('answer_revisions')
+      .select('*, answer_claims(*, answer_citations(*))')
+      .eq('tenant_id', tenantId)
+      .eq('generation_run_id', runId)
+      .order('revision_number'),
+    client
+      .from('generation_provider_usage')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .eq('generation_run_id', runId)
+      .order('attempt'),
   ]);
-  return c.json({ run, candidates: candidates ?? [], revisions: revisions ?? [], usage: usage ?? [] });
+  return c.json({
+    run,
+    candidates: candidates ?? [],
+    revisions: revisions ?? [],
+    usage: usage ?? [],
+  });
 });
 
 app.post('/v1/workspaces/:tenantId/generations/:runId/cancel', async (c) => {
@@ -297,17 +334,42 @@ app.post('/v1/workspaces/:tenantId/generations/:runId/cancel', async (c) => {
     p_tenant_id: tenantId,
     p_generation_run_id: runId,
   });
-  if (error) throw new AppError(error.code === '42501' ? 403 : 400, 'generation_cancel_failed', error.message);
+  if (error)
+    throw new AppError(
+      error.code === '42501' ? 403 : 400,
+      'generation_cancel_failed',
+      error.message,
+    );
   return c.json({ cancelled: true });
 });
 
 app.onError((error, c) => {
   const requestId = c.get('requestId') ?? crypto.randomUUID();
   if (error instanceof z.ZodError) {
-    return c.json({ error: { code: 'validation_failed', message: 'The request did not match the expected schema.', requestId, details: error.flatten() } }, 400);
+    return c.json(
+      {
+        error: {
+          code: 'validation_failed',
+          message: 'The request did not match the expected schema.',
+          requestId,
+          details: error.flatten(),
+        },
+      },
+      400,
+    );
   }
   const known = error instanceof AppError;
-  return c.json({ error: { code: known ? error.code : 'internal_error', message: known ? error.message : 'The request could not be completed.', requestId, details: known ? error.details : undefined } }, known ? error.status : 500);
+  return c.json(
+    {
+      error: {
+        code: known ? error.code : 'internal_error',
+        message: known ? error.message : 'The request could not be completed.',
+        requestId,
+        details: known ? error.details : undefined,
+      },
+    },
+    known ? error.status : 500,
+  );
 });
 
 export default app;
