@@ -359,6 +359,7 @@ app.onError((error, c) => {
     );
   }
   const known = error instanceof AppError;
+  const status = (known ? error.status : 500) as 400 | 401 | 403 | 404 | 500;
   return c.json(
     {
       error: {
@@ -368,7 +369,7 @@ app.onError((error, c) => {
         details: known ? error.details : undefined,
       },
     },
-    known ? error.status : 500,
+    status,
   );
 });
 

@@ -74,7 +74,11 @@ function candidateForClaim(
 export class FakeModelProvider implements ModelProvider {
   readonly name = 'fake' as const;
 
-  async generate(input: GenerationInput, attempt: number): Promise<ProviderResult> {
+  async generate(
+    input: GenerationInput,
+    attempt: number,
+    _signal: AbortSignal,
+  ): Promise<ProviderResult> {
     const started = Date.now();
     const claims = input.question.atomicRequests.map((request) => {
       const candidate = candidateForClaim(input, request);

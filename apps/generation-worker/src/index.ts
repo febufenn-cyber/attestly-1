@@ -337,7 +337,7 @@ async function processGeneration(
     );
     input = generationInput(context, message, candidates);
     const inputHash = generationInputHash(input);
-    const immutableCandidates = candidates.map((candidate, index) => ({
+    const immutableCandidates = candidates.map((candidate: EvidenceCandidate, index: number) => ({
       ...candidate,
       retrievalRunId: (candidateRows?.[index] as Record<string, unknown> | undefined)
         ?.retrieval_run_id,

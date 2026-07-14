@@ -212,9 +212,7 @@ describe('anthropic adapter', () => {
       model: 'claude-test',
       fetchImpl: async () => new Response('rate limited', { status: 429 }),
     });
-    await expect(provider.generate(input(), 1, AbortSignal.timeout(1_000))).rejects.toMatchObject<
-      Partial<ProviderError>
-    >({
+    await expect(provider.generate(input(), 1, AbortSignal.timeout(1_000))).rejects.toMatchObject({
       code: 'provider_rate_limited',
       retryable: true,
     });
