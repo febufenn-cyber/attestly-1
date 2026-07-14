@@ -459,7 +459,7 @@ begin
   end loop;
 
   update public.generation_runs
-  set status = case when validation_passed then 'succeeded' else 'blocked' end,
+  set status = case when validation_passed then 'succeeded'::public.generation_status else 'blocked'::public.generation_status end,
       output_hash = p_output_hash,
       validation_result = p_draft->'deterministicValidation',
       completed_at = now(), failure_code = null, failure_detail = null
