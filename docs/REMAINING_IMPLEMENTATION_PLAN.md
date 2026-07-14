@@ -13,16 +13,16 @@ This document never authorizes bypassing security, CI, migrations, tenant isolat
 
 ## 2. Current state
 
-| Phase | Name | Status |
-| --- | --- | --- |
-| 1 | Product specification and system design | Complete |
-| 2 | Secure product foundation | Complete |
-| 3 | Evidence ingestion, provenance, approval, and retrieval | Complete |
-| 4 | Questionnaire intelligence and reversible export | Complete |
-| 5 | Evidence-grounded answer generation and inspection | Complete |
-| 6 | Human review, approval, reuse, and approved export | Not started |
-| 7 | Production security, evaluation, integrations, and billing | Not started |
-| 8 | Beta, launch, and iteration | Not started |
+| Phase | Name                                                       | Status      |
+| ----- | ---------------------------------------------------------- | ----------- |
+| 1     | Product specification and system design                    | Complete    |
+| 2     | Secure product foundation                                  | Complete    |
+| 3     | Evidence ingestion, provenance, approval, and retrieval    | Complete    |
+| 4     | Questionnaire intelligence and reversible export           | Complete    |
+| 5     | Evidence-grounded answer generation and inspection         | Complete    |
+| 6     | Human review, approval, reuse, and approved export         | Not started |
+| 7     | Production security, evaluation, integrations, and billing | Not started |
+| 8     | Beta, launch, and iteration                                | Not started |
 
 Three full phases remain: Phases 6, 7, and 8. They contain 14 delivery slices plus three phase exit reviews:
 

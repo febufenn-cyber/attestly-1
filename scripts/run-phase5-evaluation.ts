@@ -6,10 +6,7 @@ import {
 } from '../packages/answer/src/evaluation-corpus';
 import { runPhase5Evaluation } from '../packages/answer/src/evaluation';
 
-const report = await runPhase5Evaluation(
-  phase5CorpusVersion,
-  phase5EvaluationCases,
-);
+const report = await runPhase5Evaluation(phase5CorpusVersion, phase5EvaluationCases);
 const reportDirectory = resolve('reports');
 const reportPath = resolve(reportDirectory, 'phase5-evaluation-report.json');
 await mkdir(reportDirectory, { recursive: true });

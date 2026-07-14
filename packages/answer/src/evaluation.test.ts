@@ -1,16 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import {
-  phase5CorpusVersion,
-  phase5EvaluationCases,
-} from './evaluation-corpus';
+import { phase5CorpusVersion, phase5EvaluationCases } from './evaluation-corpus';
 import { runPhase5Evaluation } from './evaluation';
 
 describe('Phase 5 adversarial evaluation', () => {
   it('passes every critical release gate', async () => {
-    const report = await runPhase5Evaluation(
-      phase5CorpusVersion,
-      phase5EvaluationCases,
-    );
+    const report = await runPhase5Evaluation(phase5CorpusVersion, phase5EvaluationCases);
 
     expect(report.caseCount).toBe(8);
     expect(report.criticalGates).toEqual({ passed: true, failures: [] });
@@ -28,10 +22,7 @@ describe('Phase 5 adversarial evaluation', () => {
   });
 
   it('keeps the attack cases visible in the machine-readable result', async () => {
-    const report = await runPhase5Evaluation(
-      phase5CorpusVersion,
-      phase5EvaluationCases,
-    );
+    const report = await runPhase5Evaluation(phase5CorpusVersion, phase5EvaluationCases);
     const fabricated = report.cases.find(
       (value) => value.id === 'fabricated-cross-tenant-citation',
     );

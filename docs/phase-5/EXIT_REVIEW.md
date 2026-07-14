@@ -7,23 +7,23 @@
 
 ## Exit criteria
 
-| Criterion | Result |
-| --- | --- |
-| Frozen Phase 4 questions are the only generation source | Passed |
-| Tenant and requester authorization occurs before retrieval ranking | Passed |
-| Restricted evidence requires a current authorized role | Passed |
-| Exact generation input and candidate set are immutable | Passed |
-| One fake and one production provider adapter exist | Passed |
-| Provider output is schema-constrained and deterministically validated | Passed |
-| Supported material claims require exact eligible citations | Passed |
+| Criterion                                                                                    | Result |
+| -------------------------------------------------------------------------------------------- | ------ |
+| Frozen Phase 4 questions are the only generation source                                      | Passed |
+| Tenant and requester authorization occurs before retrieval ranking                           | Passed |
+| Restricted evidence requires a current authorized role                                       | Passed |
+| Exact generation input and candidate set are immutable                                       | Passed |
+| One fake and one production provider adapter exist                                           | Passed |
+| Provider output is schema-constrained and deterministically validated                        | Passed |
+| Supported material claims require exact eligible citations                                   | Passed |
 | Scope mismatch, historical-only support, contradictions, and missing evidence abstain safely | Passed |
-| Malformed output produces no outward value | Passed |
-| Retry, timeout, cancellation, rate-limit, terminal failure, and dead-letter behavior exist | Passed |
-| Token, latency, and cost metadata exclude prompt/evidence content | Passed |
-| Reviewer console exposes limitations and provenance | Passed |
-| Regeneration creates a new immutable run | Passed |
-| Phase 5 cannot approve or export answers | Passed |
-| Versioned adversarial evaluation is a CI release gate | Passed |
+| Malformed output produces no outward value                                                   | Passed |
+| Retry, timeout, cancellation, rate-limit, terminal failure, and dead-letter behavior exist   | Passed |
+| Token, latency, and cost metadata exclude prompt/evidence content                            | Passed |
+| Reviewer console exposes limitations and provenance                                          | Passed |
+| Regeneration creates a new immutable run                                                     | Passed |
+| Phase 5 cannot approve or export answers                                                     | Passed |
+| Versioned adversarial evaluation is a CI release gate                                        | Passed |
 
 ## Critical deterministic evaluation gates
 

@@ -110,8 +110,7 @@ function supportedOutput(): ModelDraftOutput {
         proposedStatement: 'Privileged access is reviewed quarterly.',
         citationSpanIds: [ids.span],
         citationQuotes: {
-          [ids.span]:
-            'Privileged user access is reviewed quarterly by the security team.',
+          [ids.span]: 'Privileged user access is reviewed quarterly by the security team.',
         },
         reasons: [],
         missingInformation: [],

@@ -163,9 +163,7 @@ async function api<T>(session: Session, path: string, init?: RequestInit): Promi
     },
   });
   const body = (await response.json().catch(() => null)) as
-    | T
-    | { error?: { message?: string } }
-    | null;
+    T | { error?: { message?: string } } | null;
   if (!response.ok) {
     throw new Error(
       (body as { error?: { message?: string } } | null)?.error?.message ??
@@ -233,7 +231,10 @@ export default function App() {
   }, [generations]);
   const revision = latestRevision(detail);
   const candidateBySpan = useMemo(
-    () => new Map((detail?.candidates ?? []).map((candidate) => [candidate.evidence_span_id, candidate])),
+    () =>
+      new Map(
+        (detail?.candidates ?? []).map((candidate) => [candidate.evidence_span_id, candidate]),
+      ),
     [detail],
   );
 
@@ -370,7 +371,9 @@ export default function App() {
     if (!session || !tenantId || !snapshotId) return;
     const unresolved = questions.filter((question) => {
       const latest = latestByQuestion.get(question.id);
-      return !latest || ['failed_retryable', 'failed_terminal', 'cancelled'].includes(latest.status);
+      return (
+        !latest || ['failed_retryable', 'failed_terminal', 'cancelled'].includes(latest.status)
+      );
     });
     if (unresolved.length === 0) {
       setNotice('Every question already has an active or completed generation run.');
@@ -405,8 +408,8 @@ export default function App() {
           <span className="eyebrow">Attestly Phase 5</span>
           <h1>Answer inspection</h1>
           <p>
-            Sign in to generate and inspect evidence-grounded drafts. This workspace cannot
-            approve or export customer answers.
+            Sign in to generate and inspect evidence-grounded drafts. This workspace cannot approve
+            or export customer answers.
           </p>
           <label>
             Work email
@@ -468,11 +471,7 @@ export default function App() {
         <button disabled={busy || !snapshotId} onClick={() => void generateUnresolved()}>
           Generate unresolved
         </button>
-        <button
-          className="secondary"
-          disabled={busy}
-          onClick={() => void loadSnapshot()}
-        >
+        <button className="secondary" disabled={busy} onClick={() => void loadSnapshot()}>
           Refresh
         </button>
       </section>
@@ -526,10 +525,10 @@ export default function App() {
                   className={`run-card ${selectedRunId === generation.id ? 'selected' : ''}`}
                   onClick={() => setSelectedRunId(generation.id)}
                 >
-                  <span className={`status status-${generation.status}`}>
-                    {generation.status}
-                  </span>
-                  <strong>{generation.provider} · {generation.model}</strong>
+                  <span className={`status status-${generation.status}`}>{generation.status}</span>
+                  <strong>
+                    {generation.provider} · {generation.model}
+                  </strong>
                   <small>{new Date(generation.created_at).toLocaleString()}</small>
                   {generation.failure_code && <small>{generation.failure_code}</small>}
                 </button>
@@ -559,17 +558,33 @@ export default function App() {
                 <h3>Customer question</h3>
                 <p>{detail.run.questionnaire_questions.original_text}</p>
                 <dl className="meta-grid">
-                  <div><dt>Type</dt><dd>{detail.run.questionnaire_questions.question_type}</dd></div>
-                  <div><dt>Polarity</dt><dd>{detail.run.questionnaire_questions.polarity}</dd></div>
-                  <div><dt>Source</dt><dd>{locationLabel(detail.run.questionnaire_questions.source_location)}</dd></div>
-                  <div><dt>Scope</dt><dd><code>{JSON.stringify(detail.run.requested_scope)}</code></dd></div>
+                  <div>
+                    <dt>Type</dt>
+                    <dd>{detail.run.questionnaire_questions.question_type}</dd>
+                  </div>
+                  <div>
+                    <dt>Polarity</dt>
+                    <dd>{detail.run.questionnaire_questions.polarity}</dd>
+                  </div>
+                  <div>
+                    <dt>Source</dt>
+                    <dd>{locationLabel(detail.run.questionnaire_questions.source_location)}</dd>
+                  </div>
+                  <div>
+                    <dt>Scope</dt>
+                    <dd>
+                      <code>{JSON.stringify(detail.run.requested_scope)}</code>
+                    </dd>
+                  </div>
                 </dl>
               </article>
 
               <article className="subpanel outward">
                 <h3>Unapproved outward draft</h3>
                 <p className="outward-value">{revision?.outward_value ?? 'No outward value'}</p>
-                <p>{revision?.outward_text || 'The engine abstained or the run has not completed.'}</p>
+                <p>
+                  {revision?.outward_text || 'The engine abstained or the run has not completed.'}
+                </p>
                 <p className="warning-copy">This draft is not approved and cannot be exported.</p>
               </article>
 
@@ -587,16 +602,26 @@ export default function App() {
                             </span>
                           </div>
                           {claim.qualifiers.length > 0 && (
-                            <p><strong>Qualifiers:</strong> {claim.qualifiers.join(', ')}</p>
+                            <p>
+                              <strong>Qualifiers:</strong> {claim.qualifiers.join(', ')}
+                            </p>
                           )}
                           {claim.proposed_statement && <p>{claim.proposed_statement}</p>}
                           {claim.reasons.length > 0 && (
-                            <ul>{claim.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+                            <ul>
+                              {claim.reasons.map((reason) => (
+                                <li key={reason}>{reason}</li>
+                              ))}
+                            </ul>
                           )}
                           {claim.missing_information.length > 0 && (
                             <div className="missing">
                               <strong>Missing information</strong>
-                              <ul>{claim.missing_information.map((item) => <li key={item}>{item}</li>)}</ul>
+                              <ul>
+                                {claim.missing_information.map((item) => (
+                                  <li key={item}>{item}</li>
+                                ))}
+                              </ul>
                             </div>
                           )}
                           <div className="citation-list">
@@ -640,9 +665,16 @@ export default function App() {
                     </article>
                     <article className="subpanel">
                       <h3>Review routing</h3>
-                      <p><strong>Risk:</strong> {revision.risk_tier}</p>
-                      <p><strong>Required:</strong> {revision.required_reviewers.join(', ') || 'none'}</p>
-                      <p><strong>Current role:</strong> {role}</p>
+                      <p>
+                        <strong>Risk:</strong> {revision.risk_tier}
+                      </p>
+                      <p>
+                        <strong>Required:</strong>{' '}
+                        {revision.required_reviewers.join(', ') || 'none'}
+                      </p>
+                      <p>
+                        <strong>Current role:</strong> {role}
+                      </p>
                     </article>
                   </div>
 
@@ -653,23 +685,33 @@ export default function App() {
                       revision.missing_information.length === 0 && (
                         <p>No additional limitation was recorded.</p>
                       )}
-                    {revision.limitations.map((item) => <p key={item}>Limitation: {item}</p>)}
-                    {revision.contradictions.map((item) => <p key={item}>Contradiction: {item}</p>)}
-                    {revision.missing_information.map((item) => <p key={item}>Missing: {item}</p>)}
+                    {revision.limitations.map((item) => (
+                      <p key={item}>Limitation: {item}</p>
+                    ))}
+                    {revision.contradictions.map((item) => (
+                      <p key={item}>Contradiction: {item}</p>
+                    ))}
+                    {revision.missing_information.map((item) => (
+                      <p key={item}>Missing: {item}</p>
+                    ))}
                   </article>
 
                   <article className="subpanel">
                     <h3>Deterministic validation</h3>
                     <p>
                       {revision.deterministic_validation.passed ? 'Passed' : 'Blocked'} ·{' '}
-                      {revision.provider} / {revision.model} · prompt {revision.prompt_version} · schema{' '}
-                      {revision.schema_version}
+                      {revision.provider} / {revision.model} · prompt {revision.prompt_version} ·
+                      schema {revision.schema_version}
                     </p>
                     {(revision.deterministic_validation.errors ?? []).map((item) => (
-                      <p className="error" key={item}>{item}</p>
+                      <p className="error" key={item}>
+                        {item}
+                      </p>
                     ))}
                     {(revision.deterministic_validation.warnings ?? []).map((item) => (
-                      <p className="notice" key={item}>{item}</p>
+                      <p className="notice" key={item}>
+                        {item}
+                      </p>
                     ))}
                   </article>
                 </>
@@ -679,13 +721,25 @@ export default function App() {
                 <h3>Provider usage and attempts</h3>
                 <div className="table-wrap">
                   <table>
-                    <thead><tr><th>Attempt</th><th>Provider/model</th><th>Tokens</th><th>Latency</th><th>Estimated cost</th></tr></thead>
+                    <thead>
+                      <tr>
+                        <th>Attempt</th>
+                        <th>Provider/model</th>
+                        <th>Tokens</th>
+                        <th>Latency</th>
+                        <th>Estimated cost</th>
+                      </tr>
+                    </thead>
                     <tbody>
                       {detail.usage.map((item) => (
                         <tr key={item.id}>
                           <td>{item.attempt}</td>
-                          <td>{item.provider} / {item.model}</td>
-                          <td>{item.input_tokens} in · {item.output_tokens} out</td>
+                          <td>
+                            {item.provider} / {item.model}
+                          </td>
+                          <td>
+                            {item.input_tokens} in · {item.output_tokens} out
+                          </td>
                           <td>{item.latency_ms} ms</td>
                           <td>${(item.cost_micro_usd / 1_000_000).toFixed(6)}</td>
                         </tr>
@@ -693,7 +747,9 @@ export default function App() {
                     </tbody>
                   </table>
                 </div>
-                {detail.usage.length === 0 && <p className="empty">No provider usage recorded yet.</p>}
+                {detail.usage.length === 0 && (
+                  <p className="empty">No provider usage recorded yet.</p>
+                )}
               </article>
             </div>
           )}
