@@ -1,26 +1,41 @@
 # Phase 5 — Evidence-Grounded Answer Engine
 
+## Status
+
+Slices 5.1 and 5.2 are merged. Slice 5.3 implements the provider-neutral generation runtime. Phase 5 remains incomplete until the inspection console, adversarial evaluation harness, staging runbook, and exit review are merged.
+
 ## Objective
 
 Phase 5 converts one frozen Phase 4 questionnaire question and an authorized Phase 3 evidence candidate set into a structured, reviewable draft. It does not approve answers, modify questionnaire artifacts, or export customer representations.
 
 The model is a replaceable drafting component. Canonical answer state, citation validity, scope eligibility, confidence caps, disclosure rules, reviewer routing, persistence, and export eligibility remain deterministic platform responsibilities.
 
-## Core pipeline
+## Implemented pipeline
 
 ```text
 frozen questionnaire snapshot
 → question + atomic claim requests
-→ tenant/scope/disclosure-filtered evidence retrieval
-→ immutable generation input snapshot
-→ provider-neutral model draft
-→ schema validation
-→ deterministic claim/citation validation
-→ canonical answer state
-→ confidence and risk calculation
-→ immutable draft revision
-→ Phase 6 human review
+→ service retrieval evaluated as the original requester
+→ immutable candidate and input snapshot
+→ provider-neutral fake or Anthropic adapter
+→ schema-constrained model output
+→ deterministic claim, citation, scope, disclosure, and format validation
+→ canonical answer state and confidence caps
+→ immutable answer revision and provider-usage record
+→ Phase 5 inspection console
 ```
+
+## Runtime boundaries
+
+- The browser requests generation through the authenticated answer API.
+- The API creates a tenant-owned run and transactional queue outbox.
+- A Cloudflare Queue worker leases the job and retrieves only eligible evidence.
+- Service retrieval rechecks the original requester’s active membership and restricted-content role.
+- The exact structured input and candidate order are persisted before provider invocation.
+- Providers have no database credentials, tools, approval rights, or export rights.
+- Retry attempts must reuse the same input hash.
+- Malformed or terminal provider output becomes a blocked revision with no outward value.
+- Token, latency, and estimated cost metadata are stored without prompt or evidence content.
 
 ## Non-negotiable rules
 
@@ -38,44 +53,30 @@ frozen questionnaire snapshot
 12. The answer engine cannot write questionnaire source or export tables.
 13. The generated draft is never an externally approved representation.
 
-## Principal answer states
+## Provider configuration
 
-- `supported`
-- `partially_supported`
-- `historically_supported`
-- `scope_mismatch`
-- `contradicted`
-- `no_evidence`
-- `requires_sme`
-- `requires_legal`
-- `not_applicable`
-- `ambiguous_question`
-- `blocked_from_automation`
+Local development uses the deterministic fake provider. Staging and production use the Anthropic adapter only after the environment supplies:
 
-## Confidence
+- `ANTHROPIC_API_KEY` to the generation worker;
+- an approved model identity in the answer API;
+- approved input and output token-cost configuration;
+- separate staging and production queues and dead-letter queues.
 
-Confidence is not model probability. It is calculated from:
+The fake provider is rejected in production.
 
-- evidence strength;
-- semantic relevance;
-- scope match;
-- freshness;
-- source authority;
-- contradiction safety;
-- extraction quality;
-- material-claim completeness;
-- claim-to-citation alignment.
+## Verification
 
-Canonical states impose hard confidence caps. Fluency, urgency, and answer length never increase confidence.
+Slice 5.3 adds unit and database coverage for:
 
-## Phase 5 implementation slices
-
-1. **Answer kernel** — schemas, state doctrine, deterministic validators and adversarial unit tests.
-2. **Generation domain** — tenant-safe database tables, immutable input snapshots, runs, revisions, citations, RLS and pgTAP tests.
-3. **Generation runtime** — provider-neutral model gateway, retrieval orchestration, queue worker, API and fail-closed persistence.
-4. **Review console and evaluation** — reviewer-facing drafts, claim/citation inspection, batch generation, adversarial corpus and release gates.
-
-Each slice is merged into `main` only after its independent CI gates pass.
+- supported, no-evidence, contradicted, and blocked outcomes;
+- prompt-injection containment;
+- malformed output and rate-limit classification;
+- tenant-first service retrieval;
+- restricted-evidence exclusion for contributors;
+- immutable retry input;
+- idempotent provider usage;
+- typed failure states;
+- cancellation authorization.
 
 ## Deliberate limits
 
@@ -89,6 +90,10 @@ Phase 5 does not:
 - use model knowledge as customer evidence;
 - expose chain-of-thought or hidden prompts;
 - permit documents to control tools, authorization, retrieval scope, or validators.
+
+## Remaining Phase 5 slice
+
+The final slice must add the draft inspection console, regeneration, versioned adversarial evaluation, machine-readable release metrics, staging operations documentation, and the Phase 5 exit review.
 
 ## Phase 6 handoff
 

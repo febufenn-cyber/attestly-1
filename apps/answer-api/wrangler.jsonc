@@ -1,0 +1,64 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "attestly-answer-api-dev",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ENVIRONMENT": "development",
+    "EXPECTED_SUPABASE_PROJECT_REF": "local",
+    "ALLOWED_ORIGIN": "http://127.0.0.1:5177",
+    "GENERATION_PROVIDER": "fake",
+    "GENERATION_MODEL": "deterministic-fake-v1",
+    "GENERATION_MODEL_VERSION": "1",
+    "GENERATION_PROMPT_VERSION": "phase5-v1",
+  },
+  "queues": {
+    "producers": [
+      {
+        "binding": "GENERATION_QUEUE",
+        "queue": "attestly-generation-jobs-dev",
+      },
+    ],
+  },
+  "env": {
+    "staging": {
+      "name": "attestly-answer-api-staging",
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "ALLOWED_ORIGIN": "https://answers-staging.attestly.example",
+        "GENERATION_PROVIDER": "anthropic",
+        "GENERATION_MODEL": "claude-sonnet-4-5",
+        "GENERATION_MODEL_VERSION": "20250929",
+        "GENERATION_PROMPT_VERSION": "phase5-v1",
+      },
+      "queues": {
+        "producers": [
+          {
+            "binding": "GENERATION_QUEUE",
+            "queue": "attestly-generation-jobs-staging",
+          },
+        ],
+      },
+    },
+    "production": {
+      "name": "attestly-answer-api-production",
+      "vars": {
+        "ENVIRONMENT": "production",
+        "ALLOWED_ORIGIN": "https://answers.attestly.example",
+        "GENERATION_PROVIDER": "anthropic",
+        "GENERATION_MODEL": "claude-sonnet-4-5",
+        "GENERATION_MODEL_VERSION": "20250929",
+        "GENERATION_PROMPT_VERSION": "phase5-v1",
+      },
+      "queues": {
+        "producers": [
+          {
+            "binding": "GENERATION_QUEUE",
+            "queue": "attestly-generation-jobs-production",
+          },
+        ],
+      },
+    },
+  },
+}
