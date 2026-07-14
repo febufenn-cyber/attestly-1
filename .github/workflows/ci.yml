@@ -54,6 +54,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 3
       - name: Phase 5 adversarial evaluation
+        if: always()
         run: |
           npm run eval:phase5 > phase5-evaluation.log 2>&1 || {
             cat phase5-evaluation.log
