@@ -1,0 +1,46 @@
+name: Format Phase 5 console once
+
+on:
+  push:
+    branches:
+      - agent/phase-5-console-evaluation
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/phase-5-console-evaluation
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - name: Format intended files
+        run: |
+          npx prettier --write \
+            package.json \
+            .env.example \
+            .gitignore \
+            .github/workflows/ci.yml \
+            .github/workflows/deploy-phase5-staging.yml \
+            apps/answer-console \
+            packages/answer/src/evaluation.ts \
+            packages/answer/src/evaluation-corpus.ts \
+            packages/answer/src/evaluation.test.ts \
+            scripts/run-phase5-evaluation.ts \
+            README.md \
+            docs/phase-5 \
+            docs/REMAINING_IMPLEMENTATION_PLAN.md
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json .env.example .gitignore .github/workflows/ci.yml .github/workflows/deploy-phase5-staging.yml apps/answer-console packages/answer scripts README.md docs
+          git commit -m "Format Phase 5 inspection and evaluation"
+          git push origin HEAD:agent/phase-5-console-evaluation
