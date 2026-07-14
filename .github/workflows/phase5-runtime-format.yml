@@ -1,0 +1,45 @@
+name: Format Phase 5 runtime once
+
+on:
+  push:
+    branches:
+      - agent/phase-5-generation-runtime
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/phase-5-generation-runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - name: Format runtime files
+        run: |
+          npx prettier --write \
+            package.json \
+            packages/answer/src/contracts.ts \
+            packages/answer/src/provider.ts \
+            packages/answer/src/provider.test.ts \
+            apps/answer-api/src/index.ts \
+            apps/answer-api/wrangler.jsonc \
+            apps/generation-worker/src/index.ts \
+            apps/generation-worker/wrangler.jsonc \
+            supabase/migrations/202607140017_phase5_generation_runtime.sql \
+            supabase/tests/005_phase5_generation_runtime.sql \
+            docs/phase-5/README.md \
+            docs/phase-5/ADRs/0024-provider-neutral-generation-runtime.md
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json packages/answer apps/answer-api apps/generation-worker supabase docs/phase-5
+          git commit -m "Format Phase 5 generation runtime"
+          git push origin HEAD:agent/phase-5-generation-runtime
