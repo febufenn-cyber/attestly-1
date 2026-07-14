@@ -23,8 +23,6 @@ jobs:
         run: |
           npx prettier --write \
             package.json \
-            .env.example \
-            .gitignore \
             .github/workflows/ci.yml \
             .github/workflows/deploy-phase5-staging.yml \
             apps/answer-console \
