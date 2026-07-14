@@ -2,7 +2,7 @@
 
 ## Status
 
-Slices 5.1 and 5.2 are merged. Slice 5.3 implements the provider-neutral generation runtime. Phase 5 remains incomplete until the inspection console, adversarial evaluation harness, staging runbook, and exit review are merged.
+Engineering complete as a pre-beta vertical slice. Phase 5 is not approval to send generated drafts to customers or process production evidence. Human review, approvals, controlled reuse, and approved export belong to Phase 6.
 
 ## Objective
 
@@ -22,8 +22,20 @@ frozen questionnaire snapshot
 → deterministic claim, citation, scope, disclosure, and format validation
 → canonical answer state and confidence caps
 → immutable answer revision and provider-usage record
-→ Phase 5 inspection console
+→ read-only Phase 5 inspection console
+→ versioned adversarial release evaluation
 ```
+
+## Components
+
+- `packages/answer` — answer states, confidence, validators, provider gateway, evaluation metrics, and gold corpus.
+- `apps/answer-api` — authenticated generation request and inspection API.
+- `apps/generation-worker` — queue orchestration, retrieval, provider invocation, retries, safe failure, and outbox recovery.
+- `apps/answer-console` — question/run status, regeneration, atomic claims, exact citations, limitations, confidence, provider identity, and validation inspection.
+- `supabase/migrations/202607130013...202607140017` — immutable generation ledger and runtime boundaries.
+- `scripts/run-phase5-evaluation.ts` — machine-readable release evaluation.
+- [`RUNBOOK.md`](./RUNBOOK.md) — staging and incident operations.
+- [`EXIT_REVIEW.md`](./EXIT_REVIEW.md) — final Phase 5 engineering decision and known limits.
 
 ## Runtime boundaries
 
@@ -36,6 +48,7 @@ frozen questionnaire snapshot
 - Retry attempts must reuse the same input hash.
 - Malformed or terminal provider output becomes a blocked revision with no outward value.
 - Token, latency, and estimated cost metadata are stored without prompt or evidence content.
+- The inspection console contains generation and regeneration actions only; it has no approval or export capability.
 
 ## Non-negotiable rules
 
@@ -55,7 +68,7 @@ frozen questionnaire snapshot
 
 ## Provider configuration
 
-Local development uses the deterministic fake provider. Staging and production use the Anthropic adapter only after the environment supplies:
+Local development and CI use the deterministic fake provider. Staging and production use the Anthropic adapter only after the environment supplies:
 
 - `ANTHROPIC_API_KEY` to the generation worker;
 - an approved model identity in the answer API;
@@ -66,9 +79,10 @@ The fake provider is rejected in production.
 
 ## Verification
 
-Slice 5.3 adds unit and database coverage for:
+The Phase 5 test and evaluation system covers:
 
-- supported, no-evidence, contradicted, and blocked outcomes;
+- supported, partially supported, no-evidence, historical, scope-mismatch, contradicted, and blocked outcomes;
+- exact quote and candidate-set citation validation;
 - prompt-injection containment;
 - malformed output and rate-limit classification;
 - tenant-first service retrieval;
@@ -76,7 +90,17 @@ Slice 5.3 adds unit and database coverage for:
 - immutable retry input;
 - idempotent provider usage;
 - typed failure states;
-- cancellation authorization.
+- cancellation authorization;
+- regeneration as a new immutable run;
+- blocked drafts with no outward value.
+
+Run the release evaluation with:
+
+```bash
+npm run eval:phase5
+```
+
+The machine-readable result is written to `reports/phase5-evaluation-report.json`, uploaded by CI, and blocks release when a critical gate fails.
 
 ## Deliberate limits
 
@@ -90,10 +114,6 @@ Phase 5 does not:
 - use model knowledge as customer evidence;
 - expose chain-of-thought or hidden prompts;
 - permit documents to control tools, authorization, retrieval scope, or validators.
-
-## Remaining Phase 5 slice
-
-The final slice must add the draft inspection console, regeneration, versioned adversarial evaluation, machine-readable release metrics, staging operations documentation, and the Phase 5 exit review.
 
 ## Phase 6 handoff
 
