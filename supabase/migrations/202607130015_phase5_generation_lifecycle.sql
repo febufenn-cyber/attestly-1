@@ -501,13 +501,13 @@ begin
   if not found then raise exception using errcode = 'P0002', message = 'Generation run not found'; end if;
   if run_row.status in ('succeeded', 'blocked', 'failed_terminal', 'cancelled') then return; end if;
   update public.generation_runs
-  set status = case when p_retryable then 'failed_retryable' else 'failed_terminal' end,
+  set status = case when p_retryable then 'failed_retryable'::public.generation_status else 'failed_terminal'::public.generation_status end,
       failure_code = left(p_error_code, 160),
       failure_detail = left(p_error_detail, 1000),
       failed_at = now()
   where tenant_id = p_tenant_id and id = run_row.id;
   update public.jobs
-  set status = case when p_retryable then 'failed_retryable' else 'failed_terminal' end,
+  set status = case when p_retryable then 'failed_retryable'::public.job_status else 'failed_terminal'::public.job_status end,
       last_error_code = left(p_error_code, 160),
       last_error_detail = left(p_error_detail, 1000),
       failed_at = now(), lease_owner = null, lease_expires_at = null
