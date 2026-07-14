@@ -1,0 +1,73 @@
+name: Phase 5 runtime type correction
+
+on:
+  push:
+    branches:
+      - agent/phase-5-generation-runtime
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/phase-5-generation-runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - name: Correct strict TypeScript contracts
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          provider = Path('packages/answer/src/provider.ts')
+          text = provider.read_text()
+          old = "async generate(input: GenerationInput, attempt: number): Promise<ProviderResult> {"
+          new = "async generate(\n    input: GenerationInput,\n    attempt: number,\n    _signal: AbortSignal,\n  ): Promise<ProviderResult> {"
+          if old not in text:
+            raise SystemExit('fake provider signature not found')
+          provider.write_text(text.replace(old, new, 1))
+
+          worker = Path('apps/generation-worker/src/index.ts')
+          text = worker.read_text()
+          old = "const immutableCandidates = candidates.map((candidate, index) => ({"
+          new = "const immutableCandidates = candidates.map(\n      (candidate: EvidenceCandidate, index: number) => ({"
+          if old not in text:
+            raise SystemExit('candidate map not found')
+          text = text.replace(old, new, 1)
+          old_close = "candidateOrder: index + 1,\n    }));"
+          new_close = "candidateOrder: index + 1,\n      }),\n    );"
+          if old_close not in text:
+            raise SystemExit('candidate map close not found')
+          worker.write_text(text.replace(old_close, new_close, 1))
+
+          test = Path('packages/answer/src/provider.test.ts')
+          text = test.read_text()
+          text = text.replace(".rejects.toMatchObject<\n      Partial<ProviderError>\n    >({", ".rejects.toMatchObject({")
+          test.write_text(text)
+
+          api = Path('apps/answer-api/src/index.ts')
+          text = api.read_text()
+          old = "const known = error instanceof AppError;\n  return c.json("
+          new = "const known = error instanceof AppError;\n  const status = (known ? error.status : 500) as 400 | 401 | 403 | 404 | 500;\n  return c.json("
+          if old not in text:
+            raise SystemExit('API onError marker not found')
+          text = text.replace(old, new, 1)
+          text = text.replace("known ? error.status : 500,\n  );", "status,\n  );", 1)
+          api.write_text(text)
+          PY
+          npx prettier --write packages/answer/src/provider.ts packages/answer/src/provider.test.ts apps/generation-worker/src/index.ts apps/answer-api/src/index.ts
+          npm run typecheck
+      - name: Commit corrections
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/answer apps/generation-worker apps/answer-api
+          git commit -m "Fix Phase 5 runtime type contracts"
+          git push origin HEAD:agent/phase-5-generation-runtime
